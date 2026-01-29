@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  homepage3:
+    image: homepage3:latest
+    container_name: homepage3
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Required: JWT secret for session signing and credential encryption
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
+
+      # Optional: Node environment
+      NODE_ENV: ${NODE_ENV:-production}
+
+      # Optional: Data path (defaults to /app/data in container)
+      DATA_PATH: ${DATA_PATH:-/app/data}
+
+      # Optional: Port (defaults to 3000)
+      PORT: ${PORT:-3000}
+
+      # Optional: Log level (DEBUG, INFO, WARN, ERROR)
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+    volumes:
+      # Persistent data volume for database, cache, and uploads
+      - homepage3-data:/app/data
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    networks:
+      - homepage3-network
+
+volumes:
+  homepage3-data:
+    driver: local
+
+networks:
+  homepage3-network:
+    driver: bridge
