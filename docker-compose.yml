@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3005:3000"
     environment:
       # Required: JWT secret for session signing and credential encryption
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
