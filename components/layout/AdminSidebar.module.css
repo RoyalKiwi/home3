@@ -1,0 +1,137 @@
+.sidebar {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  bottom: 0;
+  width: 240px;
+  background: var(--slate-surface);
+  border-right: var(--border-width) solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: var(--spacing-section);
+  border-bottom: var(--border-width) solid var(--glass-border);
+}
+
+.headerIcon {
+  font-size: 1.5rem;
+}
+
+.headerText {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--admin-purple);
+  letter-spacing: 0.025em;
+}
+
+.nav {
+  flex: 1;
+  padding: var(--spacing-grid);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-card);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all var(--anim-snap) ease;
+  cursor: pointer;
+  border: var(--border-width) solid transparent;
+}
+
+.navItem:hover {
+  background: var(--glass-tint);
+  color: var(--text-primary);
+  border-color: var(--glass-border);
+}
+
+.navItem.active {
+  background: var(--glass-tint);
+  color: var(--admin-purple);
+  border-color: var(--admin-purple);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+}
+
+.navIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.navText {
+  flex: 1;
+}
+
+.footer {
+  padding: var(--spacing-grid);
+  border-top: var(--border-width) solid var(--glass-border);
+}
+
+.logoutForm {
+  width: 100%;
+}
+
+.logoutButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-card);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: 'JetBrains Mono', monospace;
+  border: var(--border-width) solid var(--glass-border);
+  cursor: pointer;
+  transition: all var(--anim-snap) ease;
+}
+
+.logoutButton:hover {
+  background: var(--glass-tint);
+  color: var(--status-offline);
+  border-color: var(--status-offline);
+}
+
+.logoutIcon {
+  font-size: 1.25rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .sidebar {
+    width: 64px;
+  }
+
+  .headerText,
+  .navText,
+  .logoutButton span:last-child {
+    display: none;
+  }
+
+  .header,
+  .nav,
+  .footer {
+    padding: var(--spacing-grid);
+  }
+
+  .navItem,
+  .logoutButton {
+    justify-content: center;
+    padding: 0.875rem 0.5rem;
+  }
+}

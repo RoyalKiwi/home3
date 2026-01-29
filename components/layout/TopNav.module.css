@@ -1,0 +1,101 @@
+.topNav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--slate-surface);
+  border-bottom: var(--border-width) solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-section);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.logo {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.logoText {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.logoSubtext {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-ghost);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-card);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all var(--anim-snap) ease;
+  cursor: pointer;
+  border: var(--border-width) solid transparent;
+}
+
+.tab:hover {
+  background: var(--glass-tint);
+  color: var(--text-primary);
+  border-color: var(--glass-border);
+}
+
+.tab.active {
+  background: var(--glass-tint);
+  color: var(--text-primary);
+  border-color: var(--glass-border-accent);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+.tabIcon {
+  font-size: 1.125rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .container {
+    padding: 0 var(--spacing-grid);
+  }
+
+  .logoSubtext {
+    display: none;
+  }
+
+  .tab {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+
+  .tab span:last-child {
+    display: none;
+  }
+
+  .tabIcon {
+    font-size: 1.25rem;
+  }
+}

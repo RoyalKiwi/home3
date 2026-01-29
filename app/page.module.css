@@ -5,6 +5,7 @@
   align-items: center;
   min-height: 100vh;
   padding: var(--spacing-section);
+  padding-top: calc(64px + var(--spacing-section));
 }
 
 .container {

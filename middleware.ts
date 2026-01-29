@@ -32,14 +32,14 @@ export async function middleware(request: NextRequest) {
   // Protect /admin routes
   if (pathname.startsWith('/admin')) {
     if (!session) {
-      // Not authenticated - redirect to home
-      return NextResponse.redirect(new URL('/', request.url));
+      // Not authenticated - redirect to login
+      return NextResponse.redirect(new URL('/login', request.url));
     }
 
     // Check if user has admin or superuser role
     const role = session.role as string;
     if (role !== 'admin' && role !== 'superuser') {
-      return NextResponse.redirect(new URL('/', request.url));
+      return NextResponse.redirect(new URL('/login', request.url));
     }
 
     // Allow access

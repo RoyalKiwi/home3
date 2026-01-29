@@ -1,0 +1,20 @@
+.adminLayout {
+  display: flex;
+  min-height: 100vh;
+  padding-top: 64px;
+}
+
+.mainContent {
+  flex: 1;
+  margin-left: 240px;
+  padding: var(--spacing-section);
+  min-height: calc(100vh - 64px);
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .mainContent {
+    margin-left: 64px;
+    padding: var(--spacing-grid);
+  }
+}
