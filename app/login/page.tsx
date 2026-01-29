@@ -44,9 +44,8 @@ export default function LoginPage() {
       }
 
       console.log('✅ Login successful, redirecting to admin...');
-      // Redirect to admin after successful login
-      router.push('/admin');
-      router.refresh();
+      // Redirect to admin after successful login using window.location for reliability
+      window.location.href = '/admin';
     } catch (err) {
       console.error('❌ Login error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
