@@ -16,7 +16,14 @@ A premium, high-performance home server dashboard that transforms complex home l
 
 - **Frontend**: Next.js 15 (App Router), React 19, CSS Modules, Framer Motion
 - **Backend**: Node.js 22, Better-SQLite3, Jose (JWT)
-- **Deployment**: Docker, Docker Compose
+- **Deployment**: Docker, Docker Compose, Dockge, Unraid
+
+## Deployment Quick Links
+
+- [Unraid + Dockge Deployment](#deployment-on-unraid-with-dockge) - Recommended for Unraid users
+- [Standard Docker Compose](#standard-docker-compose-deployment) - For other Docker hosts
+- [Updating on Dockge](#updating-on-unraid-with-dockge)
+- [Troubleshooting](#troubleshooting)
 
 ## Quick Start
 
@@ -64,12 +71,79 @@ A premium, high-performance home server dashboard that transforms complex home l
    http://localhost:3000
    ```
 
-### Docker Deployment
+### Deployment on Unraid with Dockge
+
+**Dockge** is a Docker Compose management UI that makes container management simple on Unraid.
+
+1. **Install Dockge on Unraid** (if not already installed)
+   - Install from Community Applications
+   - Default setup works fine
+
+2. **Clone repository on your Unraid server**
+   ```bash
+   # SSH into your Unraid server
+   cd /mnt/user/appdata/docker-apps
+   git clone https://github.com/yourusername/home3.git
+   cd home3
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   # Generate a secure JWT secret
+   openssl rand -base64 32
+
+   # Create .env file
+   nano .env
+   ```
+
+   Add the following to `.env`:
+   ```env
+   JWT_SECRET=your-generated-secret-here
+   NODE_ENV=production
+   DATA_PATH=/app/data
+   PORT=3000
+   ```
+
+4. **Build the Docker image**
+   ```bash
+   docker build --no-cache -t homepage3:latest -f Dockerfile .
+   ```
+
+5. **Start via Dockge**
+   - Open Dockge UI in your browser
+   - Click "Compose" and find your `home3` stack
+   - Click "Start" or "Up"
+   - The stack name must be lowercase (e.g., `home3` not `Home3`)
+
+6. **Check logs**
+   ```bash
+   docker logs home3 -f
+   ```
+
+   You should see:
+   - ✅ Found migrations directory at: /app/lib/migrations
+   - ✨ Database is up to date
+   - Ready in XXXms
+
+7. **Access the dashboard**
+   ```
+   http://your-unraid-ip:3005
+   ```
+   (Port 3005 is mapped from internal port 3000 in docker-compose.yml)
+
+**Important Notes for Dockge/Unraid:**
+- Stack names must be lowercase (`home3`, not `Home3`)
+- Data persists in Docker volume `homepage3_homepage3-data`
+- Use Dockge UI to stop/start, NOT `docker-compose` commands
+- To rebuild after updates: Run `docker build` manually, then use Dockge to restart
+- The database is stored in `/mnt/user/appdata/docker-apps/home3/data` on the host
+
+### Standard Docker Compose Deployment
 
 1. **Clone the repository on your server**
    ```bash
-   git clone <your-repo-url>
-   cd homepage3
+   git clone https://github.com/yourusername/home3.git
+   cd home3
    ```
 
 2. **Create environment file**
@@ -173,37 +247,108 @@ docker compose up -d
 
 ## Updating
 
+### Updating on Unraid with Dockge
+
+```bash
+# SSH into your Unraid server
+cd /mnt/user/appdata/docker-apps/home3
+
+# Pull latest code
+git pull
+
+# Rebuild the Docker image
+docker build --no-cache -t homepage3:latest -f Dockerfile .
+
+# Use Dockge UI to stop and start the stack
+# Or via command line:
+# (Note: Only use Dockge UI, avoid docker-compose commands)
+```
+
+**Via Dockge UI:**
+1. Open Dockge
+2. Find your `home3` stack
+3. Click "Down" to stop
+4. Click "Up" to start with new image
+
+### Updating with Docker Compose
+
 ```bash
 # Pull latest code
 git pull
 
 # Rebuild and restart container
 docker compose down
-docker compose build
+docker compose build --no-cache
 docker compose up -d
 ```
 
 ## Troubleshooting
 
-### View logs
+### View logs (Dockge/Unraid)
+```bash
+# Real-time logs
+docker logs home3 -f
+
+# Last 50 lines
+docker logs home3 --tail 50
+```
+
+### View logs (Docker Compose)
 ```bash
 docker compose logs -f homepage3
 ```
 
 ### Access container shell
 ```bash
+# Dockge/Unraid
+docker exec -it home3 sh
+
+# Docker Compose
 docker compose exec homepage3 sh
 ```
 
 ### Check database
 ```bash
-docker compose exec homepage3 sh
+# Inside container shell
 sqlite3 /app/data/homepage.db
 .tables
+SELECT * FROM users;
 .quit
 ```
 
+### Common Issues
+
+**Login redirects back to login page**
+- Check browser cookies in DevTools → Application → Cookies
+- Cookie `homepage3_session` should be present
+- If missing, check Docker logs for authentication errors
+- Ensure you're accessing via HTTP (not HTTPS) if `secure: false` in code
+
+**Migrations not running**
+- Check logs for "Found migrations directory" message
+- Verify `/app/lib/migrations` exists in container
+- Rebuild with `--no-cache` flag if migrations were added after initial build
+
+**Container won't start**
+- Check logs: `docker logs home3`
+- Verify port 3005 (or your configured port) is not in use
+- Ensure data volume has correct permissions
+
+**Dockge shows "Stack name can only contain [a-z][0-9]_-"**
+- Rename your folder to lowercase (e.g., `home3` not `Home3`)
+- Rename the Git repository if needed
+- Re-clone with lowercase name
+
 ### Reset database (WARNING: deletes all data)
+
+**Dockge/Unraid:**
+```bash
+# Stop container via Dockge UI, then:
+docker volume rm homepage3_homepage3-data
+# Start container via Dockge UI
+```
+
+**Docker Compose:**
 ```bash
 docker compose down
 docker volume rm homepage3_homepage3-data
