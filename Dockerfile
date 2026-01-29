@@ -15,20 +15,18 @@ RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN npm ci --only=production && \
-    npm cache clean --force
+RUN npm ci
 
 # Stage 2: Builder
 FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache python3 make g++
+# Install build dependencies including git
+RUN apk add --no-cache python3 make g++ git
 
-# Copy package files and install all dependencies (including dev)
-COPY package.json package-lock.json* ./
-RUN npm ci
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
 
 # Copy source code
 COPY . .
@@ -51,16 +49,31 @@ RUN apk add --no-cache \
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
+# Copy package files
+COPY --from=builder /app/package.json ./package.json
+
+# Copy node_modules from deps
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+
 # Copy built application
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Copy migrations
-COPY --from=builder --chown=nextjs:nodejs /app/lib/migrations ./lib/migrations
+COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
 
-# Copy production dependencies
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+# Copy app directory for pages
+COPY --from=builder --chown=nextjs:nodejs /app/app ./app
+
+# Copy components and other source files needed at runtime
+COPY --from=builder --chown=nextjs:nodejs /app/components ./components
+COPY --from=builder --chown=nextjs:nodejs /app/drivers ./drivers
+COPY --from=builder --chown=nextjs:nodejs /app/services ./services
+
+# Copy config files
+COPY --from=builder --chown=nextjs:nodejs /app/next.config.ts ./next.config.ts
+COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
+COPY --from=builder --chown=nextjs:nodejs /app/middleware.ts ./middleware.ts
 
 # Create data directory with correct permissions
 RUN mkdir -p /app/data/cache /app/data/uploads && \
@@ -82,6 +95,5 @@ ENV DATA_PATH=/app/data
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:3000/ || exit 1
 
-# Start application with dumb-init
-ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "server.js"]
+# Start application
+CMD ["npm", "start"]
