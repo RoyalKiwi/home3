@@ -26,7 +26,6 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      console.log('🔐 Attempting login for user:', formData.username);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -35,19 +34,15 @@ export default function LoginPage() {
         body: JSON.stringify(formData),
       });
 
-      console.log('📡 Login response received:', response.status);
       const data = await response.json();
-      console.log('📦 Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Login failed');
       }
 
-      console.log('✅ Login successful, redirecting to admin...');
-      // Redirect to admin after successful login using window.location for reliability
+      // Redirect to admin after successful login
       window.location.href = '/admin';
     } catch (err) {
-      console.error('❌ Login error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
