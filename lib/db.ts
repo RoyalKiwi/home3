@@ -42,9 +42,25 @@ function runMigrations() {
       .map((row: any) => row.name);
 
     // Get migration files
-    const migrationsDir = path.join(__dirname, 'migrations');
-    if (!fs.existsSync(migrationsDir)) {
+    // Try multiple possible locations for migrations
+    const possiblePaths = [
+      path.join(__dirname, 'migrations'),
+      path.join(process.cwd(), 'lib', 'migrations'),
+      path.join(process.cwd(), 'migrations'),
+    ];
+
+    let migrationsDir = '';
+    for (const dir of possiblePaths) {
+      if (fs.existsSync(dir)) {
+        migrationsDir = dir;
+        console.log(`✅ Found migrations directory at: ${dir}`);
+        break;
+      }
+    }
+
+    if (!migrationsDir) {
       console.log('ℹ️  No migrations directory found');
+      console.log('   Searched paths:', possiblePaths);
       return;
     }
 
