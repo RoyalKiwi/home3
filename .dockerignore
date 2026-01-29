@@ -51,6 +51,9 @@ build
 
 # Data
 data/
+*.db
+*.db-shm
+*.db-wal
 
 # Docker
 Dockerfile*

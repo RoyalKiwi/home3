@@ -5,29 +5,48 @@ import fs from 'fs';
 const DATA_PATH = process.env.DATA_PATH || './data';
 const DB_PATH = path.join(DATA_PATH, 'homepage.db');
 
-// Ensure data directory exists
-if (!fs.existsSync(DATA_PATH)) {
-  fs.mkdirSync(DATA_PATH, { recursive: true });
+// Only initialize database at runtime, not during build
+let db: Database.Database;
+
+function initializeDatabase() {
+  if (db) {
+    return db;
+  }
+
+  // Ensure data directory exists
+  if (!fs.existsSync(DATA_PATH)) {
+    fs.mkdirSync(DATA_PATH, { recursive: true });
+  }
+
+  // Initialize database connection
+  db = new Database(DB_PATH, {
+    verbose: process.env.LOG_LEVEL === 'DEBUG' ? console.log : undefined,
+  });
+
+  // Enable foreign keys
+  db.pragma('foreign_keys = ON');
+
+  // Enable WAL mode for better concurrency
+  db.pragma('journal_mode = WAL');
+
+  return db;
 }
-
-// Initialize database connection
-const db = new Database(DB_PATH, {
-  verbose: process.env.LOG_LEVEL === 'DEBUG' ? console.log : undefined,
-});
-
-// Enable foreign keys
-db.pragma('foreign_keys = ON');
-
-// Enable WAL mode for better concurrency
-db.pragma('journal_mode = WAL');
 
 // Run migrations on startup
 function runMigrations() {
+  // Skip migrations during build
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    console.log('⏭️  Skipping migrations during build');
+    return;
+  }
+
+  const database = initializeDatabase();
+
   try {
     console.log('📦 Running database migrations...');
 
     // Create migrations tracking table if it doesn't exist
-    db.exec(`
+    database.exec(`
       CREATE TABLE IF NOT EXISTS _migrations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE NOT NULL,
@@ -36,7 +55,7 @@ function runMigrations() {
     `);
 
     // Get executed migrations
-    const executedMigrations = db
+    const executedMigrations = database
       .prepare('SELECT name FROM _migrations ORDER BY id')
       .all()
       .map((row: any) => row.name);
@@ -87,8 +106,8 @@ function runMigrations() {
 
       console.log(`🔄 Executing migration: ${migrationFile}`);
 
-      db.exec(sql);
-      db.prepare('INSERT INTO _migrations (name) VALUES (?)').run(migrationFile);
+      database.exec(sql);
+      database.prepare('INSERT INTO _migrations (name) VALUES (?)').run(migrationFile);
 
       console.log(`✅ Migration completed: ${migrationFile}`);
     }
@@ -100,35 +119,39 @@ function runMigrations() {
   }
 }
 
-// Run migrations immediately
+// Run migrations immediately (but will be skipped during build)
 runMigrations();
 
 /**
  * Get database instance
  */
 export function getDb() {
-  return db;
+  return initializeDatabase();
 }
 
 /**
  * Close database connection (for graceful shutdown)
  */
 export function closeDb() {
-  db.close();
+  if (db) {
+    db.close();
+  }
 }
 
 /**
  * Execute a migration SQL file
  */
 export function executeMigration(sql: string) {
-  db.exec(sql);
+  const database = initializeDatabase();
+  database.exec(sql);
 }
 
 /**
  * Check if a table exists
  */
 export function tableExists(tableName: string): boolean {
-  const result = db
+  const database = initializeDatabase();
+  const result = database
     .prepare(
       "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
     )
@@ -140,8 +163,9 @@ export function tableExists(tableName: string): boolean {
  * Get all users (for onboarding check)
  */
 export function getUserCount(): number {
-  const result = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
+  const database = initializeDatabase();
+  const result = database.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
   return result.count;
 }
 
-export default db;
+export default getDb;
