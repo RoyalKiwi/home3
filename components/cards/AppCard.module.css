@@ -1,0 +1,282 @@
+/* Base Card Styles */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: rgba(22, 27, 34, 0.4);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 200ms ease;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.card:hover {
+  transform: scale(1.02);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+/* Card Content Container */
+.cardContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+/* Icon Styles */
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Text Content */
+.textContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.subtext {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Status Indicator */
+.statusIndicator {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 2;
+}
+
+.statusDot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.statusDot.online {
+  background: #22C55E;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.statusDot.warning {
+  background: #F59E0B;
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.statusDot.offline {
+  background: #EF4444;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Gradient Overlay (for large cards) */
+.gradientOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    var(--grad-1, #3B82F6) 0%,
+    var(--grad-2, #A855F7) 33%,
+    var(--grad-3, #0a192f) 66%,
+    var(--grad-4, #050608) 100%
+  );
+  opacity: 0.15;
+  z-index: 0;
+  animation: breathe 6s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.withGradient {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.withGradient:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ========================================
+   CARD SIZE VARIANTS
+   ======================================== */
+
+/* Small Card (25% width, square-ish) */
+.small {
+  min-height: 140px;
+}
+
+.small .iconWrapper {
+  width: 48px;
+  height: 48px;
+}
+
+.small .cardContent {
+  gap: 0.5rem;
+}
+
+.small .name {
+  font-size: 1rem;
+}
+
+.small .subtext {
+  font-size: 0.8125rem;
+}
+
+/* Medium Card (50% width, horizontal) */
+.medium {
+  min-height: 120px;
+}
+
+.medium .cardContent {
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+
+.medium .iconWrapper {
+  width: 56px;
+  height: 56px;
+}
+
+.medium .textContent {
+  flex: 1;
+}
+
+/* Large Card (25% width, tall/vertical with gradient) */
+.large {
+  min-height: 280px;
+}
+
+.large .iconWrapper {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+}
+
+.large .textContent {
+  text-align: center;
+}
+
+.large .name {
+  font-size: 1.25rem;
+}
+
+.large .cardContent {
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Mobile (<640px) - Stack all cards */
+@media (max-width: 639px) {
+  .card {
+    width: 100%;
+  }
+
+  .small,
+  .medium,
+  .large {
+    min-height: 120px;
+  }
+
+  .medium .cardContent {
+    flex-direction: row;
+  }
+
+  .large .cardContent {
+    flex-direction: row;
+    text-align: left;
+  }
+
+  .large .iconWrapper {
+    width: 56px;
+    height: 56px;
+    margin: 0;
+  }
+
+  .large .textContent {
+    text-align: left;
+  }
+}
+
+/* Tablet (640px - 1024px) - 2 column grid */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .small {
+    width: calc(50% - 0.5rem);
+  }
+
+  .medium {
+    width: 100%;
+  }
+
+  .large {
+    width: calc(50% - 0.5rem);
+    min-height: 240px;
+  }
+}
+
+/* Desktop (>1024px) - Flexible grid */
+@media (min-width: 1024px) {
+  .small {
+    width: calc(25% - 0.75rem);
+  }
+
+  .medium {
+    width: calc(50% - 0.75rem);
+  }
+
+  .large {
+    width: calc(25% - 0.75rem);
+  }
+}
