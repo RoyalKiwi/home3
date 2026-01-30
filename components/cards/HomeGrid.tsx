@@ -169,15 +169,17 @@ export default function HomeGrid() {
         if (filteredCards.length === 0 && searchQuery) return null;
 
         return (
-          <div key={subcategory.subcategoryId} className={styles.category}>
-            {/* Subcategory Header */}
+          <div key={subcategory.subcategoryId} className={styles.subcategory}>
+            {/* Subcategory Header with optional separator */}
             <button
-              className={styles.categoryHeader}
+              className={styles.subcategoryHeader}
               onClick={() => toggleSubcategory(subcategory.subcategoryId)}
               aria-expanded={!isCollapsed}
+              style={{ cursor: 'pointer', background: 'transparent', border: 'none', width: '100%', padding: 0 }}
             >
-              <h2 className={styles.categoryName}>{subcategory.subcategoryName}</h2>
-              <span className={`${styles.chevron} ${isCollapsed ? styles.collapsed : ''}`}>
+              <h3 className={styles.subcategoryName}>{subcategory.subcategoryName}</h3>
+              {subcategory.showSeparator && <div className={styles.separator} />}
+              <span className={`${styles.chevron} ${isCollapsed ? styles.collapsed : ''}`} style={{ marginLeft: '1rem' }}>
                 ▼
               </span>
             </button>

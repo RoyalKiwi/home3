@@ -115,6 +115,12 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.subcategoryHeader:hover .subcategoryName {
+  color: var(--color-text-primary);
 }
 
 .subcategoryName {
