@@ -137,6 +137,7 @@ export async function PATCH(
 
     if (body.name !== undefined) {
       const name = validateString(body.name, 'name', 1, 100);
+      console.log(`📝 Updating name: "${name}" (type: ${typeof name}, length: ${name.length})`);
       updates.push('name = ?');
       values.push(name);
     }
@@ -155,9 +156,12 @@ export async function PATCH(
 
     if (body.admin_only !== undefined) {
       const adminOnly = validateBoolean(body.admin_only);
+      console.log(`🔒 Updating admin_only: ${adminOnly} (will save as: ${adminOnly ? 1 : 0})`);
       updates.push('admin_only = ?');
       values.push(adminOnly ? 1 : 0);
     }
+
+    console.log(`📊 Final SQL params - updates: ${updates.join(', ')}, values:`, values);
 
     // Always update updated_at
     updates.push("updated_at = datetime('now')");
@@ -170,6 +174,8 @@ export async function PATCH(
     const subcategory = db
       .prepare('SELECT * FROM subcategories WHERE id = ?')
       .get(subcategoryId) as Subcategory;
+
+    console.log(`✅ Subcategory after update: name="${subcategory.name}", admin_only=${subcategory.admin_only}`);
 
     return NextResponse.json({
       success: true,
