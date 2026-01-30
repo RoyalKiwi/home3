@@ -61,7 +61,7 @@ function SortableItem({ id, subcategory, categoryName, onEdit, onDelete }: Sorta
       <div className={styles.content}>
         <div className={styles.name}>
           {subcategory.name}
-          {subcategory.admin_only && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', padding: '0.125rem 0.375rem', background: '#ef4444', borderRadius: '4px' }}>Admin</span>}
+          {subcategory.admin_only === 1 && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', padding: '0.125rem 0.375rem', background: '#ef4444', borderRadius: '4px' }}>Admin</span>}
         </div>
         <div className={styles.meta}>
           Category: {categoryName} | Order: {subcategory.order_index}
