@@ -83,14 +83,14 @@ export default function HomeGrid() {
               .filter((card: Card) => card.subcategory_id === sub.id)
               .sort((a, b) => a.order_index - b.order_index),
           }))
-          .filter((sub) => sub.cards.length > 0); // Only show subcategories with cards
+          .filter((sub: any) => sub.cards.length > 0); // Only show subcategories with cards
 
         return {
           categoryId: category.id,
           categoryName: category.name,
           subcategories: categorySubs,
         };
-      }).filter((cat) => cat.subcategories.length > 0); // Only show categories with subcategories
+      }).filter((cat: any) => cat.subcategories.length > 0); // Only show categories with subcategories
 
       setGroupedCards(grouped);
     } catch (err: any) {
