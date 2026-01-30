@@ -52,8 +52,11 @@ export async function POST(request: NextRequest) {
     // Save uploaded file
     const iconPath = saveUploadedIcon(buffer, file.name);
 
+    // Convert API path (/api/data/uploads/file.svg) to relative path (uploads/file.svg)
+    const relativePath = iconPath.replace('/api/data/', '');
+
     // Extract colors and generate gradient
-    const dominantColors = await extractDominantColors(iconPath);
+    const dominantColors = await extractDominantColors(relativePath);
     const gradient = generateGradient(dominantColors);
 
     console.log(`✅ Icon upload complete: ${iconPath}`);

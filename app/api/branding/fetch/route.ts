@@ -34,7 +34,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 2: Extract dominant colors
-    const dominantColors = await extractDominantColors(iconPath);
+    // Convert API path (/api/data/cache/file.svg) to relative path (cache/file.svg)
+    const relativePath = iconPath.replace('/api/data/', '');
+    const dominantColors = await extractDominantColors(relativePath);
 
     // Step 3: Generate 4-color gradient
     const gradient = generateGradient(dominantColors);

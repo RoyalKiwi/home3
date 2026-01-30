@@ -21,8 +21,11 @@ export async function POST(request: NextRequest) {
 
     console.log(`🎨 Generating gradient for: ${iconPath}`);
 
+    // Convert API path (/api/data/cache/file.svg) to relative path (cache/file.svg)
+    const relativePath = iconPath.replace('/api/data/', '');
+
     // Extract colors and generate gradient
-    const dominantColors = await extractDominantColors(iconPath);
+    const dominantColors = await extractDominantColors(relativePath);
     const gradient = generateGradient(dominantColors);
 
     console.log(`✅ Gradient generated: ${gradient.join(', ')}`);
