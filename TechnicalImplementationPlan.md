@@ -612,9 +612,9 @@ Docker container on private LAN, optimized for low-powered hardware (tablets/old
 
 ---
 
-### Phase 2: CRUD Operations (Data Management)
+### Phase 2: CRUD Operations (Data Management) ✅ COMPLETE
 
-#### Task 2.1: Categories API
+#### Task 2.1: Categories API ✅ COMPLETE
 **What to create:**
 - `/api/categories/route.ts`: GET (list all), POST (create)
 - `/api/categories/[id]/route.ts`: GET (single), PATCH (update), DELETE (cascade to subcategories/cards)
@@ -630,7 +630,7 @@ Docker container on private LAN, optimized for low-powered hardware (tablets/old
 - Create category → query DB
 - Delete category with subcategories → verify cascade
 
-#### Task 2.2: Subcategories API
+#### Task 2.2: Subcategories API ✅ COMPLETE
 **What to create:**
 - `/api/subcategories/route.ts`: GET, POST
 - `/api/subcategories/[id]/route.ts`: GET, PATCH, DELETE
@@ -644,7 +644,7 @@ Docker container on private LAN, optimized for low-powered hardware (tablets/old
 
 **Test plan:** Create subcategory → verify `category_id` foreign key
 
-#### Task 2.3: Cards API
+#### Task 2.3: Cards API ✅ COMPLETE
 **What to create:**
 - `/api/cards/route.ts`: GET (with role-based filtering), POST
 - `/api/cards/[id]/route.ts`: GET, PATCH, DELETE
@@ -662,7 +662,7 @@ Docker container on private LAN, optimized for low-powered hardware (tablets/old
 - GET `/api/cards` without auth → card hidden
 - GET `/api/cards` with admin JWT → card visible
 
-#### Task 2.4: Admin Dashboard Module (UI)
+#### Task 2.4: Admin Dashboard Module (UI) ✅ COMPLETE
 **What to create:**
 - `/app/admin/dashboard/page.tsx`: List view of categories/subcategories/cards
 - `/components/admin/DndList.tsx`: Drag-and-drop reordering with `@dnd-kit`
