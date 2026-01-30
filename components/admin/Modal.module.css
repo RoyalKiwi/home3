@@ -173,6 +173,50 @@
   cursor: not-allowed;
 }
 
+.secondaryButton {
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--color-accent);
+}
+
+.secondaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gradientPreview {
+  width: 100%;
+  height: 60px;
+  border-radius: 8px;
+  margin-top: 8px;
+  border: 1px solid var(--color-border);
+  background: linear-gradient(135deg, var(--grad-1, #3B82F6) 0%, var(--grad-2, #A855F7) 33%, var(--grad-3, #0a192f) 66%, var(--grad-4, #050608) 100%);
+}
+
+.noGradient {
+  width: 100%;
+  height: 60px;
+  border-radius: 8px;
+  margin-top: 8px;
+  border: 1px dashed var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
 @media (max-width: 640px) {
   .modal {
     max-width: 100%;
