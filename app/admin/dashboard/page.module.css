@@ -58,21 +58,23 @@
 }
 
 .createButton {
-  padding: 0.625rem 1.25rem;
+  padding: 0.625rem 1.5rem;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   color: white;
-  background: var(--color-accent);
+  background: #9333ea;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   margin-bottom: 0.5rem;
+  box-shadow: 0 2px 4px rgba(147, 51, 234, 0.2);
 }
 
 .createButton:hover {
-  background: var(--color-accent-hover);
+  background: #7e22ce;
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(147, 51, 234, 0.3);
 }
 
 .content {
