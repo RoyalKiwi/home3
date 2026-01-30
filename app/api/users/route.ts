@@ -63,9 +63,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: passwordError }, { status: 400 });
     }
 
-    const roleError = validateEnum(role, ['superuser', 'admin'], 'Role');
-    if (roleError) {
-      return NextResponse.json({ error: roleError }, { status: 400 });
+    // Validate role
+    if (!role || !['superuser', 'admin'].includes(role)) {
+      return NextResponse.json(
+        { error: 'Role must be either "superuser" or "admin"' },
+        { status: 400 }
+      );
     }
 
     const db = getDb();
