@@ -196,7 +196,7 @@
 /* Large Card (25% width, tall/vertical with gradient - phone screen shape) */
 .large {
   height: 480px;
-  padding: 0;
+  padding: 1rem;
 }
 
 .large .iconWrapper {
@@ -213,12 +213,12 @@
 }
 
 .large .cardContent {
-  flex: 1 !important;
   flex-direction: column !important;
   align-items: flex-start !important;
-  justify-content: flex-end !important;
   gap: 1rem;
-  padding: 1rem;
+  margin-top: auto !important;
+  justify-content: flex-start !important;
+  height: auto !important;
 }
 
 /* ========================================
