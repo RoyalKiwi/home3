@@ -195,7 +195,7 @@
 
 /* Large Card (25% width, tall/vertical with gradient - phone screen shape) */
 .large {
-  min-height: 480px;
+  height: 480px;
   padding: 0;
 }
 
@@ -213,9 +213,9 @@
 }
 
 .large .cardContent {
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-end;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-end !important;
   gap: 1rem;
   padding: 1rem;
 }
