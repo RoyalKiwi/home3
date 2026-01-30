@@ -38,6 +38,21 @@ export default function AppCard({ card }: AppCardProps) {
   // Determine if card should show gradient (large cards only)
   const showGradient = card.size === 'large' && card.gradient_colors;
 
+  // Get gradient style class
+  const getGradientStyleClass = () => {
+    const style = card.gradient_style || 'diagonal';
+    const styleMap: Record<string, string> = {
+      'diagonal': styles.diagonal,
+      'four-corner': styles.fourCorner,
+      'radial': styles.radial,
+      'conic': styles.conic,
+      'horizontal': styles.horizontal,
+      'vertical': styles.vertical,
+      'double-diagonal': styles.doubleDiagonal,
+    };
+    return styleMap[style] || styles.diagonal;
+  };
+
   return (
     <a
       href={card.url}
@@ -73,7 +88,7 @@ export default function AppCard({ card }: AppCardProps) {
       </div>
 
       {/* Gradient Overlay for large cards */}
-      {showGradient && <div className={styles.gradientOverlay}></div>}
+      {showGradient && <div className={`${styles.gradientOverlay} ${getGradientStyleClass()}`}></div>}
     </a>
   );
 }

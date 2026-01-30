@@ -9,7 +9,7 @@ import {
   validateEnum,
   validateJSON,
 } from '@/lib/validation';
-import type { Card, CardSize } from '@/lib/types';
+import type { Card, CardSize, GradientStyle } from '@/lib/types';
 import { cleanupCardIcon } from '@/lib/services/assetCleanup';
 
 /**
@@ -92,6 +92,7 @@ export async function PATCH(
       body.subcategory_id !== undefined ||
       body.icon_url !== undefined ||
       body.gradient_colors !== undefined ||
+      body.gradient_style !== undefined ||
       body.size !== undefined ||
       body.show_status !== undefined ||
       body.order_index !== undefined;
@@ -172,6 +173,12 @@ export async function PATCH(
         : null;
       updates.push('gradient_colors = ?');
       values.push(gradientColors);
+    }
+
+    if (body.gradient_style !== undefined) {
+      const gradientStyle = validateEnum<GradientStyle>(body.gradient_style, 'gradient_style', ['diagonal', 'four-corner', 'radial', 'conic', 'horizontal', 'vertical', 'double-diagonal']);
+      updates.push('gradient_style = ?');
+      values.push(gradientStyle);
     }
 
     if (body.size !== undefined) {

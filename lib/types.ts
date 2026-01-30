@@ -20,6 +20,7 @@ export interface Subcategory {
 }
 
 export type CardSize = 'small' | 'medium' | 'large';
+export type GradientStyle = 'diagonal' | 'four-corner' | 'radial' | 'conic' | 'horizontal' | 'vertical' | 'double-diagonal';
 
 export interface Card {
   id: number;
@@ -29,6 +30,7 @@ export interface Card {
   url: string;
   icon_url: string | null;
   gradient_colors: string | null;
+  gradient_style: GradientStyle;
   size: CardSize;
   show_status: boolean;
   order_index: number;
@@ -71,6 +73,7 @@ export interface CreateCardRequest {
   url: string;
   icon_url?: string | null;
   gradient_colors?: string | null;
+  gradient_style?: GradientStyle;
   size?: CardSize;
   show_status?: boolean;
   order_index?: number;
@@ -83,6 +86,7 @@ export interface UpdateCardRequest {
   url?: string;
   icon_url?: string | null;
   gradient_colors?: string | null;
+  gradient_style?: GradientStyle;
   size?: CardSize;
   show_status?: boolean;
   order_index?: number;

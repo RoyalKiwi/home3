@@ -9,7 +9,7 @@ import {
   validateEnum,
   validateJSON,
 } from '@/lib/validation';
-import type { Card, CardSize } from '@/lib/types';
+import type { Card, CardSize, GradientStyle } from '@/lib/types';
 import { fetchIconFromUrl } from '@/lib/services/branding';
 
 /**
@@ -117,6 +117,10 @@ export async function POST(request: NextRequest) {
       ? validateJSON(body.gradient_colors, 'gradient_colors')
       : null;
 
+    const gradientStyle: GradientStyle = body.gradient_style !== undefined
+      ? validateEnum<GradientStyle>(body.gradient_style, 'gradient_style', ['diagonal', 'four-corner', 'radial', 'conic', 'horizontal', 'vertical', 'double-diagonal'])
+      : 'diagonal';
+
     // Auto-fetch icon if not provided (gradient is manual via UI button)
     if (!iconUrl) {
       console.log(`🎯 Auto-fetching icon for: ${name} (${url})`);
@@ -159,9 +163,9 @@ export async function POST(request: NextRequest) {
       .prepare(`
         INSERT INTO cards (
           subcategory_id, name, subtext, url, icon_url,
-          gradient_colors, size, show_status, order_index
+          gradient_colors, gradient_style, size, show_status, order_index
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .run(
         subcategoryId,
@@ -170,6 +174,7 @@ export async function POST(request: NextRequest) {
         url,
         iconUrl,
         gradientColors,
+        gradientStyle,
         size,
         showStatus ? 1 : 0,
         orderIndex

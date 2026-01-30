@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, FormEvent, useRef } from 'react';
-import type { Card, Subcategory, CardSize } from '@/lib/types';
+import type { Card, Subcategory, CardSize, GradientStyle } from '@/lib/types';
 import styles from './Modal.module.css';
 
 interface CardModalProps {
@@ -17,6 +17,7 @@ export default function CardModal({ card, subcategories, onClose }: CardModalPro
   const [url, setUrl] = useState(card?.url || '');
   const [iconUrl, setIconUrl] = useState(card?.icon_url || '');
   const [gradientColors, setGradientColors] = useState(card?.gradient_colors || '');
+  const [gradientStyle, setGradientStyle] = useState<GradientStyle>(card?.gradient_style || 'diagonal');
   const [size, setSize] = useState<CardSize>(card?.size || 'small');
   const [showStatus, setShowStatus] = useState(card?.show_status ?? true);
   const [loading, setLoading] = useState(false);
@@ -168,6 +169,7 @@ export default function CardModal({ card, subcategories, onClose }: CardModalPro
         url: url.trim(),
         icon_url: iconUrl.trim() || null,
         gradient_colors: gradientColors.trim() || null,
+        gradient_style: gradientStyle,
         size,
         show_status: showStatus,
       };
@@ -333,6 +335,24 @@ export default function CardModal({ card, subcategories, onClose }: CardModalPro
             ) : (
               <div className={styles.noGradient}>No gradient - generate or enter colors above</div>
             )}
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label}>Gradient Style</label>
+            <select
+              className={styles.select}
+              value={gradientStyle}
+              onChange={(e) => setGradientStyle(e.target.value as GradientStyle)}
+              disabled={loading}
+            >
+              <option value="diagonal">Diagonal (Default)</option>
+              <option value="four-corner">Four Corner Radial</option>
+              <option value="radial">Center Radial</option>
+              <option value="conic">Conic (Spinning Wheel)</option>
+              <option value="horizontal">Horizontal</option>
+              <option value="vertical">Vertical</option>
+              <option value="double-diagonal">Double Diagonal (X-Pattern)</option>
+            </select>
           </div>
 
           <div className={styles.field}>
