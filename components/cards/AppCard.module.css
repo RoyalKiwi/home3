@@ -213,6 +213,7 @@
 }
 
 .large .cardContent {
+  flex: 1 !important;
   flex-direction: column !important;
   align-items: flex-start !important;
   justify-content: flex-end !important;
@@ -267,12 +268,13 @@
 
   .large {
     width: calc(50% - 0.5rem);
-    min-height: 400px;
+    height: 400px;
   }
 
   .large .cardContent {
-    justify-content: flex-end;
-    align-items: flex-start;
+    flex: 1 !important;
+    justify-content: flex-end !important;
+    align-items: flex-start !important;
   }
 
   .large .iconWrapper {
