@@ -5,31 +5,27 @@ import AppCard from './AppCard';
 import type { Card } from '@/lib/types';
 import styles from './HomeGrid.module.css';
 
-interface GroupedCards {
-  categoryId: number;
-  categoryName: string;
-  subcategories: {
-    subcategoryId: number;
-    subcategoryName: string;
-    showSeparator: boolean;
-    cards: Card[];
-  }[];
+interface SubcategoryWithCards {
+  subcategoryId: number;
+  subcategoryName: string;
+  showSeparator: boolean;
+  cards: Card[];
 }
 
 export default function HomeGrid() {
-  const [groupedCards, setGroupedCards] = useState<GroupedCards[]>([]);
+  const [subcategories, setSubcategories] = useState<SubcategoryWithCards[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<number>>(new Set());
+  const [collapsedSubcategories, setCollapsedSubcategories] = useState<Set<number>>(new Set());
 
   // Load collapsed state from LocalStorage
   useEffect(() => {
-    const saved = localStorage.getItem('collapsedCategories');
+    const saved = localStorage.getItem('collapsedSubcategories');
     if (saved) {
       try {
         const ids = JSON.parse(saved);
-        setCollapsedCategories(new Set(ids));
+        setCollapsedSubcategories(new Set(ids));
       } catch {
         // Ignore invalid data
       }
@@ -38,8 +34,8 @@ export default function HomeGrid() {
 
   // Save collapsed state to LocalStorage
   useEffect(() => {
-    localStorage.setItem('collapsedCategories', JSON.stringify(Array.from(collapsedCategories)));
-  }, [collapsedCategories]);
+    localStorage.setItem('collapsedSubcategories', JSON.stringify(Array.from(collapsedSubcategories)));
+  }, [collapsedSubcategories]);
 
   // Fetch and group cards
   useEffect(() => {
@@ -52,47 +48,35 @@ export default function HomeGrid() {
       setError('');
 
       // Fetch all data in parallel
-      const [cardsRes, categoriesRes, subcategoriesRes] = await Promise.all([
+      const [cardsRes, subcategoriesRes] = await Promise.all([
         fetch('/api/cards'),
-        fetch('/api/categories'),
         fetch('/api/subcategories'),
       ]);
 
-      if (!cardsRes.ok || !categoriesRes.ok || !subcategoriesRes.ok) {
+      if (!cardsRes.ok || !subcategoriesRes.ok) {
         throw new Error('Failed to fetch data');
       }
 
       const cardsData = await cardsRes.json();
-      const categoriesData = await categoriesRes.json();
       const subcategoriesData = await subcategoriesRes.json();
 
       const cards: Card[] = cardsData.data || [];
-      const categories = categoriesData.data || [];
-      const subcategories = subcategoriesData.data || [];
+      const subs = subcategoriesData.data || [];
 
-      // Group cards by category and subcategory
-      const grouped: GroupedCards[] = categories.map((category: any) => {
-        const categorySubs = subcategories
-          .filter((sub: any) => sub.category_id === category.id)
-          .sort((a: any, b: any) => a.order_index - b.order_index)
-          .map((sub: any) => ({
-            subcategoryId: sub.id,
-            subcategoryName: sub.name,
-            showSeparator: sub.show_separator,
-            cards: cards
-              .filter((card: Card) => card.subcategory_id === sub.id)
-              .sort((a, b) => a.order_index - b.order_index),
-          }))
-          .filter((sub: any) => sub.cards.length > 0); // Only show subcategories with cards
+      // Group cards by subcategory
+      const grouped: SubcategoryWithCards[] = subs
+        .sort((a: any, b: any) => a.order_index - b.order_index)
+        .map((sub: any) => ({
+          subcategoryId: sub.id,
+          subcategoryName: sub.name,
+          showSeparator: sub.show_separator,
+          cards: cards
+            .filter((card: Card) => card.subcategory_id === sub.id)
+            .sort((a, b) => a.order_index - b.order_index),
+        }))
+        .filter((sub: any) => sub.cards.length > 0); // Only show subcategories with cards
 
-        return {
-          categoryId: category.id,
-          categoryName: category.name,
-          subcategories: categorySubs,
-        };
-      }).filter((cat: any) => cat.subcategories.length > 0); // Only show categories with subcategories
-
-      setGroupedCards(grouped);
+      setSubcategories(grouped);
     } catch (err: any) {
       setError(err.message || 'Failed to load cards');
     } finally {
@@ -100,14 +84,14 @@ export default function HomeGrid() {
     }
   };
 
-  // Toggle category collapse
-  const toggleCategory = (categoryId: number) => {
-    setCollapsedCategories((prev) => {
+  // Toggle subcategory collapse
+  const toggleSubcategory = (subcategoryId: number) => {
+    setCollapsedSubcategories((prev) => {
       const next = new Set(prev);
-      if (next.has(categoryId)) {
-        next.delete(categoryId);
+      if (next.has(subcategoryId)) {
+        next.delete(subcategoryId);
       } else {
-        next.add(categoryId);
+        next.add(subcategoryId);
       }
       return next;
     });
@@ -146,9 +130,7 @@ export default function HomeGrid() {
   }
 
   // Check if search returns no results
-  const hasResults = groupedCards.some((category) =>
-    category.subcategories.some((sub) => filterCards(sub.cards).length > 0)
-  );
+  const hasResults = subcategories.some((sub) => filterCards(sub.cards).length > 0);
 
   return (
     <div className={styles.container}>
@@ -179,57 +161,33 @@ export default function HomeGrid() {
         </div>
       )}
 
-      {/* Categories */}
-      {groupedCards.map((category) => {
-        const isCollapsed = collapsedCategories.has(category.categoryId);
-        const visibleSubcategories = category.subcategories.filter(
-          (sub) => filterCards(sub.cards).length > 0
-        );
+      {/* Subcategories (visual categories) */}
+      {subcategories.map((subcategory) => {
+        const isCollapsed = collapsedSubcategories.has(subcategory.subcategoryId);
+        const filteredCards = filterCards(subcategory.cards);
 
-        if (visibleSubcategories.length === 0 && searchQuery) return null;
+        if (filteredCards.length === 0 && searchQuery) return null;
 
         return (
-          <div key={category.categoryId} className={styles.category}>
-            {/* Category Header */}
+          <div key={subcategory.subcategoryId} className={styles.category}>
+            {/* Subcategory Header */}
             <button
               className={styles.categoryHeader}
-              onClick={() => toggleCategory(category.categoryId)}
+              onClick={() => toggleSubcategory(subcategory.subcategoryId)}
               aria-expanded={!isCollapsed}
             >
-              <h2 className={styles.categoryName}>{category.categoryName}</h2>
+              <h2 className={styles.categoryName}>{subcategory.subcategoryName}</h2>
               <span className={`${styles.chevron} ${isCollapsed ? styles.collapsed : ''}`}>
                 ▼
               </span>
             </button>
 
-            {/* Subcategories */}
+            {/* Cards Grid */}
             {!isCollapsed && (
-              <div className={styles.subcategories}>
-                {visibleSubcategories.map((subcategory) => {
-                  const filteredCards = filterCards(subcategory.cards);
-                  if (filteredCards.length === 0) return null;
-
-                  return (
-                    <div key={subcategory.subcategoryId} className={styles.subcategory}>
-                      {/* Subcategory Name with Separator */}
-                      {subcategory.showSeparator && (
-                        <div className={styles.subcategoryHeader}>
-                          <h3 className={styles.subcategoryName}>
-                            {subcategory.subcategoryName}
-                          </h3>
-                          <div className={styles.separator}></div>
-                        </div>
-                      )}
-
-                      {/* Cards Grid */}
-                      <div className={styles.cardsGrid}>
-                        {filteredCards.map((card) => (
-                          <AppCard key={card.id} card={card} />
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className={styles.cardsGrid}>
+                {filteredCards.map((card) => (
+                  <AppCard key={card.id} card={card} />
+                ))}
               </div>
             )}
           </div>
@@ -237,7 +195,7 @@ export default function HomeGrid() {
       })}
 
       {/* Empty State */}
-      {groupedCards.length === 0 && !searchQuery && (
+      {subcategories.length === 0 && !searchQuery && (
         <div className={styles.emptyState}>
           <p>No apps yet. Add some cards in the admin dashboard!</p>
         </div>
