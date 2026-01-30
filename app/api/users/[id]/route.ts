@@ -18,11 +18,8 @@ export async function DELETE(
     const { id } = await params;
     const userId = parseInt(id, 10);
 
-    // Validate ID
-    const idError = validateInteger(userId, 'User ID', 1);
-    if (idError) {
-      return NextResponse.json({ error: idError }, { status: 400 });
-    }
+    // Validate ID - throws error if invalid
+    validateInteger(userId, 'User ID', 1);
 
     // Prevent deleting yourself
     if (userId === session.userId) {
@@ -68,6 +65,12 @@ export async function DELETE(
     console.error('Error deleting user:', error);
 
     if (error instanceof Error) {
+      // Validation errors
+      if (error.message.includes('must be')) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+
+      // Auth errors
       if (error.message === 'Authentication required') {
         return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
       }
