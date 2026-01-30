@@ -51,10 +51,15 @@ function SortableItem({ id, card, subcategoryName, onEdit, onDelete }: SortableI
           <circle cx="12" cy="12" r="1.5" />
         </svg>
       </div>
+      {card.icon_url && (
+        <div className={styles.iconPreview}>
+          <img src={card.icon_url} alt={card.name} />
+        </div>
+      )}
       <div className={styles.content}>
         <div className={styles.name}>{card.name}</div>
         <div className={styles.meta}>
-          {subcategoryName} | Size: {card.size} | Order: {card.order_index}
+          {subcategoryName} | Size: {card.size}
         </div>
       </div>
       <div className={styles.actions}>
