@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -81,12 +81,19 @@ function SortableItem({ id, category, onEdit, onDelete }: SortableItemProps) {
   );
 }
 
-export default function CategoryList() {
+const CategoryList = forwardRef((props, ref) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    openCreateModal: () => {
+      setEditingCategory(null);
+      setModalOpen(true);
+    }
+  }));
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -205,13 +212,6 @@ export default function CategoryList() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>Categories</h2>
-        <button className={styles.createButton} onClick={handleCreate}>
-          + New Category
-        </button>
-      </div>
-
       {categories.length === 0 ? (
         <div className={styles.empty}>
           No categories yet. Create your first category to get started.
@@ -249,4 +249,8 @@ export default function CategoryList() {
       )}
     </div>
   );
-}
+});
+
+CategoryList.displayName = 'CategoryList';
+
+export default CategoryList;

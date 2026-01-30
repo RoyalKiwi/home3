@@ -21,11 +21,17 @@
   margin: 0;
 }
 
+.tabsContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: 2rem;
+}
+
 .tabs {
   display: flex;
   gap: 0.5rem;
-  border-bottom: 2px solid var(--color-border);
-  margin-bottom: 2rem;
 }
 
 .tab {
@@ -49,6 +55,24 @@
 .tab.active {
   color: var(--color-accent);
   border-bottom-color: var(--color-accent);
+}
+
+.createButton {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+  background: var(--color-accent);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.createButton:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
 }
 
 .content {

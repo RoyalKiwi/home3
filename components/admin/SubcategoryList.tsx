@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -87,13 +87,20 @@ function SortableItem({ id, subcategory, categoryName, onEdit, onDelete }: Sorta
   );
 }
 
-export default function SubcategoryList() {
+const SubcategoryList = forwardRef((props, ref) => {
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSubcategory, setEditingSubcategory] = useState<Subcategory | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    openCreateModal: () => {
+      setEditingSubcategory(null);
+      setModalOpen(true);
+    }
+  }));
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -184,13 +191,6 @@ export default function SubcategoryList() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>Subcategories</h2>
-        <button className={styles.createButton} onClick={() => { setEditingSubcategory(null); setModalOpen(true); }}>
-          + New Subcategory
-        </button>
-      </div>
-
       {subcategories.length === 0 ? (
         <div className={styles.empty}>No subcategories yet. Create your first subcategory to get started.</div>
       ) : (
@@ -221,4 +221,8 @@ export default function SubcategoryList() {
       )}
     </div>
   );
-}
+});
+
+SubcategoryList.displayName = 'SubcategoryList';
+
+export default SubcategoryList;

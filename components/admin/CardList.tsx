@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -70,13 +70,20 @@ function SortableItem({ id, card, subcategoryName, onEdit, onDelete }: SortableI
   );
 }
 
-export default function CardList() {
+const CardList = forwardRef((props, ref) => {
   const [cards, setCards] = useState<Card[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<Card | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    openCreateModal: () => {
+      setEditingCard(null);
+      setModalOpen(true);
+    }
+  }));
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -195,13 +202,6 @@ export default function CardList() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>Cards</h2>
-        <button className={styles.createButton} onClick={() => { setEditingCard(null); setModalOpen(true); }}>
-          + New Card
-        </button>
-      </div>
-
       {cards.length === 0 ? (
         <div className={styles.empty}>No cards yet. Create your first card to get started.</div>
       ) : (
@@ -240,4 +240,8 @@ export default function CardList() {
       )}
     </div>
   );
-}
+});
+
+CardList.displayName = 'CardList';
+
+export default CardList;
