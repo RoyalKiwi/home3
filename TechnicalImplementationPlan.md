@@ -1087,6 +1087,268 @@ Docker container on private LAN, optimized for low-powered hardware (tablets/old
 
 ---
 
+## 7. PRODUCTION DEPLOYMENT
+
+### 7.1 Clean Server Deployment Pattern
+
+For production deployments, the application follows a **pre-built image pattern** where only minimal files are needed on the server. This eliminates the need to copy source code or run builds on production servers.
+
+#### Required Files on Production Server
+```
+/opt/home3/              # Or any deployment directory
+├── docker-compose.yml   # Production compose file
+└── data/                # Persistent data directory
+    ├── database.db      # SQLite database (created on first run)
+    ├── cache/           # Downloaded icons (created on first run)
+    └── uploads/         # User-uploaded icons (created on first run)
+```
+
+#### Build and Push Workflow
+
+1. **Build Production Image**
+   ```bash
+   # On development machine or CI/CD pipeline
+   docker build -t yourusername/home3:latest .
+   docker build -t yourusername/home3:1.0.0 .  # Tagged version
+   ```
+
+2. **Push to Registry**
+   ```bash
+   # Docker Hub (recommended)
+   docker login
+   docker push yourusername/home3:latest
+   docker push yourusername/home3:1.0.0
+
+   # Or private registry
+   docker tag yourusername/home3:latest registry.example.com/home3:latest
+   docker push registry.example.com/home3:latest
+   ```
+
+3. **Deploy to Production Server**
+   ```bash
+   # On production server - only need docker-compose.yml
+   mkdir -p /opt/home3/data
+   cd /opt/home3
+
+   # Create production docker-compose.yml (see below)
+   vim docker-compose.yml
+
+   # Pull and run
+   docker compose pull
+   docker compose up -d
+   ```
+
+#### Production docker-compose.yml Example
+
+```yaml
+version: '3.8'
+
+services:
+  home3:
+    image: yourusername/home3:latest  # Pre-built image from registry
+    container_name: home3
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-in-production}
+      - DATA_PATH=/app/data
+    volumes:
+      - ./data:/app/data  # Only data folder needs to be mounted
+    networks:
+      - home3_network
+
+networks:
+  home3_network:
+    driver: bridge
+```
+
+#### Environment Variables
+
+Create a `.env` file in the same directory as `docker-compose.yml`:
+
+```bash
+# .env
+JWT_SECRET=your-super-secret-jwt-key-here
+NODE_ENV=production
+```
+
+#### Deployment Commands
+
+```bash
+# Initial deployment
+docker compose up -d
+
+# Update to latest version
+docker compose pull
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop application
+docker compose down
+
+# Backup data (important!)
+tar -czf home3-backup-$(date +%Y%m%d).tar.gz data/
+```
+
+### 7.2 Multi-Stage Dockerfile Strategy
+
+The existing `Dockerfile` uses a multi-stage build pattern that produces a lean production image:
+
+```dockerfile
+# Stage 1: Dependencies (uses npm ci for reproducible builds)
+FROM node:20-alpine AS deps
+# ... install production dependencies only
+
+# Stage 2: Builder (compiles Next.js app)
+FROM node:20-alpine AS builder
+# ... build optimized production bundle
+
+# Stage 3: Runner (final minimal image)
+FROM node:20-alpine AS runner
+# ... only runtime files, no source code or build tools
+```
+
+**Benefits:**
+- Final image contains only runtime dependencies and built artifacts
+- Source code and build tools excluded from production image
+- Significantly smaller image size (~200MB vs ~800MB with build tools)
+- Better security (reduced attack surface)
+
+### 7.3 Reverse Proxy Integration (Optional)
+
+For HTTPS and domain routing, integrate with Traefik or Nginx Proxy Manager:
+
+#### Traefik Example
+
+```yaml
+# docker-compose.yml with Traefik labels
+version: '3.8'
+
+services:
+  home3:
+    image: yourusername/home3:latest
+    container_name: home3
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+      - DATA_PATH=/app/data
+    volumes:
+      - ./data:/app/data
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.home3.rule=Host(`home.example.com`)"
+      - "traefik.http.routers.home3.entrypoints=websecure"
+      - "traefik.http.routers.home3.tls.certresolver=letsencrypt"
+      - "traefik.http.services.home3.loadbalancer.server.port=3000"
+
+networks:
+  traefik_proxy:
+    external: true
+```
+
+### 7.4 Backup and Restore
+
+#### Backup Strategy
+
+```bash
+#!/bin/bash
+# backup.sh - Run daily via cron
+
+BACKUP_DIR="/backups/home3"
+DATE=$(date +%Y%m%d-%H%M%S)
+
+mkdir -p $BACKUP_DIR
+
+# Backup database and assets
+cd /opt/home3
+tar -czf $BACKUP_DIR/home3-$DATE.tar.gz data/
+
+# Keep last 30 days of backups
+find $BACKUP_DIR -name "home3-*.tar.gz" -mtime +30 -delete
+
+echo "Backup completed: home3-$DATE.tar.gz"
+```
+
+#### Restore Procedure
+
+```bash
+# Stop application
+cd /opt/home3
+docker compose down
+
+# Restore from backup
+tar -xzf /backups/home3/home3-20260130-120000.tar.gz
+
+# Start application
+docker compose up -d
+```
+
+### 7.5 Updates and Rollbacks
+
+#### Update to New Version
+
+```bash
+# Pull latest image
+docker compose pull
+
+# Backup before update
+tar -czf backup-pre-update.tar.gz data/
+
+# Apply update
+docker compose up -d
+
+# Verify application
+docker compose logs -f
+```
+
+#### Rollback to Previous Version
+
+```bash
+# Stop current version
+docker compose down
+
+# Update docker-compose.yml to use previous tag
+vim docker-compose.yml  # Change image: yourusername/home3:1.0.0
+
+# Start previous version
+docker compose up -d
+```
+
+### 7.6 Monitoring and Health Checks
+
+Add health checks to `docker-compose.yml`:
+
+```yaml
+services:
+  home3:
+    image: yourusername/home3:latest
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+```
+
+Create health check endpoint in `app/api/health/route.ts`:
+
+```typescript
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  return NextResponse.json({ status: 'healthy' }, { status: 200 });
+}
+```
+
+---
+
 ## REVISION HISTORY
 
 | Date | Version | Changes |

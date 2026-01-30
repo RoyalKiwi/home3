@@ -72,10 +72,16 @@
 
 /* Status Indicator */
 .statusIndicator {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  z-index: 2;
+  position: absolute !important;
+  top: 0.75rem !important;
+  right: 0.75rem !important;
+  left: auto !important;
+  bottom: auto !important;
+  z-index: 10 !important;
+  margin: 0 !important;
+  background: rgba(255, 0, 0, 0.3) !important; /* Debug: red background */
+  padding: 4px !important;
+  border-radius: 50% !important;
 }
 
 .statusDot {
