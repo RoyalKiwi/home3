@@ -223,17 +223,27 @@ async function urlExists(url: string): Promise<boolean> {
  */
 async function downloadIcon(url: string): Promise<Buffer | null> {
   try {
+    console.log(`📥 Downloading icon from: ${url}`);
     const response = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Homepage3/1.0)' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; Homepage3/1.0)',
+        'Accept': 'image/*,*/*',
+      },
       signal: AbortSignal.timeout(10000),
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.error(`❌ Download failed: ${response.status} ${response.statusText}`);
+      return null;
+    }
 
+    console.log(`✅ Download successful: ${response.headers.get('content-type')}`);
     const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
+    const buffer = Buffer.from(arrayBuffer);
+    console.log(`💾 Downloaded ${buffer.length} bytes`);
+    return buffer;
   } catch (error) {
-    console.error('Download error:', error);
+    console.error('❌ Download error:', error);
     return null;
   }
 }
