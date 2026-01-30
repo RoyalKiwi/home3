@@ -11,11 +11,14 @@ const DATA_PATH = process.env.DATA_PATH || './data';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
+    // Await params in Next.js 15
+    const { path: pathSegments } = await params;
+
     // Join the path segments
-    const filePath = path.join(DATA_PATH, ...params.path);
+    const filePath = path.join(DATA_PATH, ...pathSegments);
 
     // Security: Ensure the resolved path is within DATA_PATH
     const resolvedPath = path.resolve(filePath);
