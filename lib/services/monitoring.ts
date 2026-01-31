@@ -1,6 +1,6 @@
 /**
  * Monitoring Orchestrator
- * Polls all active integrations and broadcasts updates via SSE
+ * Polls integrations on-demand with rate limiting based on poll_interval
  */
 
 import { getDb } from '@/lib/db';
@@ -9,84 +9,20 @@ import { createDriver } from './driverFactory';
 import type { Integration, IntegrationCredentials, MetricCapability } from '@/lib/types';
 
 class MonitoringService {
-  private pollingInterval: NodeJS.Timeout | null = null;
-  private isRunning = false;
-
   /**
-   * Start the monitoring service
+   * Check if enough time has passed since last poll (rate limiting)
    */
-  start() {
-    if (this.isRunning) {
-      console.log('[Monitoring] Service already running');
-      return;
+  private canPoll(integration: Integration): boolean {
+    if (!integration.last_poll_at) {
+      return true; // Never polled before
     }
 
-    console.log('[Monitoring] Starting monitoring service');
-    this.isRunning = true;
+    const lastPoll = new Date(integration.last_poll_at).getTime();
+    const now = Date.now();
+    const elapsed = now - lastPoll;
 
-    // Initial poll
-    this.pollAll();
-
-    // Set up recurring polling (every 30 seconds)
-    this.pollingInterval = setInterval(() => {
-      this.pollAll();
-    }, 30000);
-  }
-
-  /**
-   * Stop the monitoring service
-   */
-  stop() {
-    if (!this.isRunning) {
-      return;
-    }
-
-    console.log('[Monitoring] Stopping monitoring service');
-    this.isRunning = false;
-
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
-      this.pollingInterval = null;
-    }
-  }
-
-  /**
-   * Poll all active integrations
-   */
-  private async pollAll() {
-    try {
-      const db = getDb();
-
-      // Get all active integrations
-      const integrations = db
-        .prepare('SELECT * FROM integrations WHERE is_active = 1')
-        .all() as Integration[];
-
-      if (integrations.length === 0) {
-        console.log('[Monitoring] No active integrations to poll');
-        return;
-      }
-
-      console.log(`[Monitoring] Polling ${integrations.length} integrations`);
-
-      // Poll each integration independently (fail-silent)
-      const results = await Promise.allSettled(
-        integrations.map((integration) => this.pollIntegration(integration))
-      );
-
-      // Log results
-      results.forEach((result, index) => {
-        const integration = integrations[index];
-        if (result.status === 'rejected') {
-          console.error(
-            `[Monitoring] Failed to poll ${integration.service_name}:`,
-            result.reason
-          );
-        }
-      });
-    } catch (error) {
-      console.error('[Monitoring] Error in pollAll:', error);
-    }
+    // poll_interval is the minimum time between polls
+    return elapsed >= integration.poll_interval;
   }
 
   /**
@@ -166,9 +102,9 @@ class MonitoringService {
   }
 
   /**
-   * Poll a specific integration on demand
+   * Poll a specific integration on demand (with rate limiting)
    */
-  async pollIntegrationById(integrationId: number) {
+  async pollIntegrationById(integrationId: number, force = false) {
     const db = getDb();
 
     const integration = db
@@ -179,24 +115,20 @@ class MonitoringService {
       throw new Error('Integration not found');
     }
 
-    return this.pollIntegration(integration);
-  }
+    // Check rate limit unless forced
+    if (!force && !this.canPoll(integration)) {
+      const lastPoll = new Date(integration.last_poll_at!).getTime();
+      const nextPoll = lastPoll + integration.poll_interval;
+      const waitTime = Math.ceil((nextPoll - Date.now()) / 1000);
 
-  /**
-   * Get service status
-   */
-  getStatus() {
-    return {
-      isRunning: this.isRunning,
-      hasPollingInterval: this.pollingInterval !== null,
-    };
+      throw new Error(
+        `Rate limited: Please wait ${waitTime} seconds before polling again`
+      );
+    }
+
+    return this.pollIntegration(integration);
   }
 }
 
 // Singleton instance
 export const monitoringService = new MonitoringService();
-
-// Auto-start in production
-if (process.env.NODE_ENV === 'production') {
-  monitoringService.start();
-}
