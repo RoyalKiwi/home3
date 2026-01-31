@@ -10,9 +10,17 @@ import { UnraidDriver } from '@/drivers/unraid';
 import type { IntegrationType, IntegrationCredentials } from '@/lib/types';
 
 /**
+ * Constructor type for driver classes
+ */
+type DriverConstructor = new (
+  integrationId: number,
+  credentials: IntegrationCredentials
+) => BaseDriver;
+
+/**
  * Driver registry mapping service types to driver classes
  */
-const DRIVER_REGISTRY: Record<IntegrationType, typeof BaseDriver> = {
+const DRIVER_REGISTRY: Record<IntegrationType, DriverConstructor> = {
   'uptime-kuma': UptimeKumaDriver,
   'netdata': NetdataDriver,
   'unraid': UnraidDriver,
