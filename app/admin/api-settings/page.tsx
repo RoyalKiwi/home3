@@ -270,7 +270,7 @@ export default function APISettingsPage() {
               <input
                 type="url"
                 id="url"
-                placeholder="https://unraid.example.com"
+                placeholder="http://192.168.1.100:81"
                 value={(formData.credentials as any).url || ''}
                 onChange={(e) =>
                   setFormData({
@@ -280,13 +280,16 @@ export default function APISettingsPage() {
                 }
                 required={!editingId}
               />
+              <small className={styles.hint}>
+                Include port if not using default (e.g., :81)
+              </small>
             </div>
             <div className={styles.formGroup}>
-              <label htmlFor="apiKey">API Key</label>
+              <label htmlFor="apiKey">API Key *</label>
               <input
                 type="password"
                 id="apiKey"
-                placeholder="Optional if using username/password"
+                placeholder="Generated from Unraid Settings > API Keys"
                 value={(formData.credentials as any).apiKey || ''}
                 onChange={(e) =>
                   setFormData({
@@ -294,36 +297,7 @@ export default function APISettingsPage() {
                     credentials: { ...formData.credentials, apiKey: e.target.value },
                   })
                 }
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="username">Username</label>
-              <input
-                type="text"
-                id="username"
-                placeholder="Optional if using API key"
-                value={(formData.credentials as any).username || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    credentials: { ...formData.credentials, username: e.target.value },
-                  })
-                }
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                placeholder="Optional if using API key"
-                value={(formData.credentials as any).password || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    credentials: { ...formData.credentials, password: e.target.value },
-                  })
-                }
+                required={!editingId}
               />
             </div>
           </>

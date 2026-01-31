@@ -35,14 +35,12 @@ export class UnraidDriver extends BaseDriver {
       'Content-Type': 'application/json',
     };
 
-    // Add API key if provided
-    if (this.config.apiKey) {
-      headers['x-api-key'] = this.config.apiKey;
-    } else if (this.config.username && this.config.password) {
-      // Fallback to Basic Auth if no API key
-      const auth = Buffer.from(`${this.config.username}:${this.config.password}`).toString('base64');
-      headers['Authorization'] = `Basic ${auth}`;
+    // Unraid official API requires API key authentication
+    if (!this.config.apiKey) {
+      throw new Error('API key is required for Unraid GraphQL API');
     }
+
+    headers['x-api-key'] = this.config.apiKey;
 
     const response = await fetch(url, {
       method: 'POST',
