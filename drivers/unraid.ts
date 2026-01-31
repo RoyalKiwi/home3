@@ -50,7 +50,17 @@ export class UnraidDriver extends BaseDriver {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Try to get error details from response body
+      let errorDetails = response.statusText;
+      try {
+        const errorBody = await response.text();
+        if (errorBody) {
+          errorDetails = errorBody;
+        }
+      } catch (e) {
+        // Ignore if we can't read the body
+      }
+      throw new Error(`HTTP ${response.status}: ${errorDetails}`);
     }
 
     const result = await response.json();
@@ -137,6 +147,7 @@ export class UnraidDriver extends BaseDriver {
     const query = `
       query {
         info {
+          id
           memory {
             total
             free
@@ -210,18 +221,21 @@ export class UnraidDriver extends BaseDriver {
   async fetchDocker(): Promise<MetricData> {
     const query = `
       query {
-        dockerContainers {
+        docker {
           id
-          names
-          state
-          status
-          autoStart
+          containers {
+            id
+            names
+            state
+            status
+            autoStart
+          }
         }
       }
     `;
 
     const data = await this.graphqlQuery(query);
-    const containers = data.dockerContainers || [];
+    const containers = data.docker?.containers || [];
 
     // Count running containers
     const running = containers.filter((c: any) => c.state === 'running').length;
