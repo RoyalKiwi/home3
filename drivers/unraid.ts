@@ -149,9 +149,10 @@ export class UnraidDriver extends BaseDriver {
         info {
           id
           memory {
-            total
-            free
-            used
+            memTotal
+            memFree
+            memUsed
+            memAvailable
           }
         }
       }
@@ -159,16 +160,17 @@ export class UnraidDriver extends BaseDriver {
 
     const data = await this.graphqlQuery(query);
     const mem = data.info.memory;
-    const percentage = (mem.used / mem.total) * 100;
+    const percentage = (mem.memUsed / mem.memTotal) * 100;
 
     return {
       timestamp: new Date().toISOString(),
       value: Math.round(percentage * 100) / 100,
       unit: '%',
       metadata: {
-        total: mem.total,
-        used: mem.used,
-        free: mem.free,
+        total: mem.memTotal,
+        used: mem.memUsed,
+        free: mem.memFree,
+        available: mem.memAvailable,
       },
     };
   }
