@@ -44,12 +44,9 @@ export async function GET(request: NextRequest) {
  * Sets or clears the global status source (admin only)
  */
 export async function PUT(request: NextRequest) {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
   try {
+    await requireAuth();
+
     const body = await request.json();
     const { integration_id } = body;
 
@@ -98,6 +95,14 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error('[API] PUT /api/settings/status-source error:', error);
+
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,

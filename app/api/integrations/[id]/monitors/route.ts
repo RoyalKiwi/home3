@@ -20,22 +20,18 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const { id } = await params;
-  const integrationId = parseInt(id, 10);
-
-  if (isNaN(integrationId)) {
-    return NextResponse.json(
-      { success: false, error: 'Invalid integration ID' },
-      { status: 400 }
-    );
-  }
-
   try {
+    await requireAuth();
+
+    const { id } = await params;
+    const integrationId = parseInt(id, 10);
+
+    if (isNaN(integrationId)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid integration ID' },
+        { status: 400 }
+      );
+    }
     const db = getDb();
 
     const integration = db
@@ -97,6 +93,14 @@ export async function GET(
     });
   } catch (error) {
     console.error('[API] GET /api/integrations/:id/monitors error:', error);
+
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,

@@ -15,12 +15,9 @@ import type { Card } from '@/lib/types';
  * Returns all cards that have show_status=true with their current mappings
  */
 export async function GET(request: NextRequest) {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
   try {
+    await requireAuth();
+
     const db = getDb();
 
     const cards = db
@@ -39,6 +36,14 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('[API] GET /api/cards/status-mappings error:', error);
+
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,
@@ -60,12 +65,9 @@ interface MappingUpdate {
  * Saves card-to-monitor mappings in a transaction
  */
 export async function PUT(request: NextRequest) {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
   try {
+    await requireAuth();
+
     const body = await request.json();
     const { mappings } = body as { mappings: MappingUpdate[] };
 
@@ -108,6 +110,14 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error('[API] PUT /api/cards/status-mappings error:', error);
+
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,
