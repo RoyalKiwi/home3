@@ -18,14 +18,15 @@ import type { Integration, IntegrationCredentials } from '@/lib/types';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) {
     return authResult;
   }
 
-  const integrationId = parseInt(params.id, 10);
+  const { id } = await params;
+  const integrationId = parseInt(id, 10);
 
   if (isNaN(integrationId)) {
     return NextResponse.json(
