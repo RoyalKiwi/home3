@@ -79,10 +79,11 @@ This document is the "Source of Truth" for the Homepage3 project. We will plan e
   - **Home (Viewing Experience)**: A focused, full-width categorized grid.
     - **External Links**: Clicking an app card **must** open in a new tab to preserve the dashboard state.
   - **Admin (Control Experience)**:
-    - **Sidebar Navigation**: A conditional, persistent left-hand sidebar that **only appears** when the Admin world is active via the top-nav toggle. It contains five core modules:
+    - **Sidebar Navigation**: A conditional, persistent left-hand sidebar that **only appears** when the Admin world is active via the top-nav toggle. It contains six core modules:
       - **Admin Console**: General overview and tactical ticker.
       - **Dashboard**: Hierarchical list management for Categories, Subcategories, and Cards.
       - **Users**: User account and role management.
+      - **Configuration**: Status dot configuration with global and per-card source selection, card-to-monitor mappings.
       - **API Settings**: Driver credentials and integration logs.
       - **Monitoring**: Deep telemetry and server health hub.
     - **Inner Module Navigation**: Horizontal sub-tabs for granular management within a module (e.g., "Cards", "Subcategories" inside Dashboard).
