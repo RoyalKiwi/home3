@@ -3,7 +3,7 @@
 **Generated**: 2026-01-29
 **Last Updated**: 2026-02-01
 **Source Document**: [FullProjectPlan.md](./FullProjectPlan.md)
-**Status**: Phase 0 ✅ COMPLETE | Phase 1 ✅ COMPLETE | Phase 2 ✅ COMPLETE | Phase 3 ✅ COMPLETE | Phase 4 ✅ COMPLETE | Phase 5 ✅ COMPLETE
+**Status**: Phase 0 ✅ COMPLETE | Phase 1 ✅ COMPLETE | Phase 2 ✅ COMPLETE | Phase 3 ✅ COMPLETE | Phase 4 ✅ COMPLETE | Phase 5 ✅ COMPLETE | Phase 6 ✅ COMPLETE
 
 ---
 
@@ -948,7 +948,7 @@ Docker container on private LAN, optimized for low-powered hardware (tablets/old
 
 ### Phase 6: User Management
 
-#### Task 6.1: Users API
+#### Task 6.1: Users API ✅ COMPLETE
 **What to create:**
 - `/api/users/route.ts`: GET (list all), POST (create new admin)
 - `/api/users/[id]/route.ts`: DELETE (only superuser can delete)
@@ -964,7 +964,7 @@ Docker container on private LAN, optimized for low-powered hardware (tablets/old
 - Login as superuser → create admin
 - Login as admin → try to create user → 403
 
-#### Task 6.2: Users Management UI
+#### Task 6.2: Users Management UI ✅ COMPLETE
 **What to create:**
 - `/app/admin/users/page.tsx`: List of users with add/delete buttons
 
@@ -1440,6 +1440,7 @@ export async function GET() {
 | 2026-01-30 | 3.0 | Phase 3 completed: Branding & Asset Management - Icon fetch service, color extraction, gradient generation, and asset cleanup |
 | 2026-01-30 | 4.0 | Phase 5 completed: Home Grid Rendering - AppCard components, glassmorphic styling, responsive grid layout, search/filter, and category collapse |
 | 2026-02-01 | 5.0 | Phase 4 completed: Real-Time Monitoring - SSE infrastructure, driver architecture (Unraid/Uptime Kuma/Netdata), multi-source status polling, Configuration page with card-to-monitor mappings, per-card source overrides, collapsible UI sections, and Unraid container name bug fixes |
+| 2026-02-01 | 6.0 | Phase 6 completed: User Management - Users API with superuser-only creation/deletion, cannot delete self or last superuser, Users Management UI with modal forms and delete confirmation dialogs |
 
 ---
 
