@@ -25,6 +25,7 @@ export default function ConfigurationPage() {
   const [statusSourceId, setStatusSourceId] = useState<number | null>(null);
   const [cards, setCards] = useState<CardMapping[]>([]);
   const [monitors, setMonitors] = useState<Monitor[]>([]);
+  const [monitorsByIntegration, setMonitorsByIntegration] = useState<Map<number, Monitor[]>>(new Map());
   const [loadingMappings, setLoadingMappings] = useState(false);
   const [savingMappings, setSavingMappings] = useState(false);
 
@@ -63,6 +64,21 @@ export default function ConfigurationPage() {
     }
   };
 
+  const fetchMonitorsForIntegration = async (integrationId: number): Promise<Monitor[]> => {
+    try {
+      const res = await fetch(`/api/integrations/${integrationId}/monitors`);
+      const data = await res.json();
+
+      if (res.ok && data.data) {
+        return data.data as Monitor[];
+      }
+      return [];
+    } catch (err) {
+      console.error(`Failed to fetch monitors for integration ${integrationId}:`, err);
+      return [];
+    }
+  };
+
   const loadStatusMappings = async (sourceId: number) => {
     setLoadingMappings(true);
     try {
@@ -81,6 +97,9 @@ export default function ConfigurationPage() {
         if (monitorsRes.ok && monitorsData.data) {
           const fetchedMonitors = monitorsData.data as Monitor[];
           setMonitors(fetchedMonitors);
+
+          // Store monitors for the global source
+          setMonitorsByIntegration(prev => new Map(prev).set(sourceId, fetchedMonitors));
 
           // Auto-match cards to monitors
           const monitorsByName = new Map<string, string>();
@@ -103,6 +122,15 @@ export default function ConfigurationPage() {
           });
 
           setCards(matchedCards);
+
+          // Fetch monitors for any cards that have overridden sources
+          const uniqueSourceIds = new Set(fetchedCards.map(c => c.status_source_id).filter((id): id is number => id !== null));
+          uniqueSourceIds.forEach(async (id) => {
+            if (id !== sourceId) {
+              const integrationMonitors = await fetchMonitorsForIntegration(id);
+              setMonitorsByIntegration(prev => new Map(prev).set(id, integrationMonitors));
+            }
+          });
         } else {
           setCards(fetchedCards);
         }
@@ -141,14 +169,30 @@ export default function ConfigurationPage() {
     }
   };
 
-  const handleCardMappingChange = (cardId: number, field: 'status_source_id' | 'status_monitor_name', value: string | null) => {
+  const handleCardMappingChange = async (cardId: number, field: 'status_source_id' | 'status_monitor_name', value: string | null) => {
+    const parsedValue = value === '' ? null : field === 'status_source_id' ? parseInt(value || '0', 10) : value;
+
     setCards((prev) =>
       prev.map((card) =>
         card.id === cardId
-          ? { ...card, [field]: value === '' ? null : field === 'status_source_id' ? parseInt(value || '0', 10) : value }
+          ? {
+              ...card,
+              [field]: parsedValue,
+              // Clear monitor selection when source changes
+              ...(field === 'status_source_id' ? { status_monitor_name: null } : {})
+            }
           : card
       )
     );
+
+    // If changing source, fetch monitors for that integration
+    if (field === 'status_source_id' && parsedValue && typeof parsedValue === 'number') {
+      // Check if we already have monitors for this integration
+      if (!monitorsByIntegration.has(parsedValue)) {
+        const integrationMonitors = await fetchMonitorsForIntegration(parsedValue);
+        setMonitorsByIntegration(prev => new Map(prev).set(parsedValue, integrationMonitors));
+      }
+    }
   };
 
   const handleSaveMappings = async () => {
@@ -178,6 +222,14 @@ export default function ConfigurationPage() {
     } finally {
       setSavingMappings(false);
     }
+  };
+
+  // Get monitors for a specific card based on its source
+  const getMonitorsForCard = (card: CardMapping): Monitor[] => {
+    const effectiveSourceId = card.status_source_id || statusSourceId;
+    if (!effectiveSourceId) return [];
+
+    return monitorsByIntegration.get(effectiveSourceId) || monitors;
   };
 
   if (loading) {
@@ -232,11 +284,28 @@ export default function ConfigurationPage() {
                 <div className={styles.mappingsTable}>
                   <div className={styles.tableHeader}>
                     <span>Card Name</span>
+                    <span>Source</span>
                     <span>Monitor/Container</span>
                   </div>
                   {cards.map((card) => (
                     <div key={card.id} className={styles.tableRow}>
                       <span className={styles.cardName}>{card.name}</span>
+                      <select
+                        value={card.status_source_id || ''}
+                        onChange={(e) =>
+                          handleCardMappingChange(card.id, 'status_source_id', e.target.value)
+                        }
+                        className={styles.select}
+                      >
+                        <option value="">-- Global --</option>
+                        {integrations
+                          .filter((i) => ['uptime-kuma', 'unraid'].includes(i.service_type))
+                          .map((i) => (
+                            <option key={i.id} value={i.id}>
+                              {i.service_name} ({i.service_type})
+                            </option>
+                          ))}
+                      </select>
                       <select
                         value={card.status_monitor_name || ''}
                         onChange={(e) =>
@@ -245,7 +314,7 @@ export default function ConfigurationPage() {
                         className={styles.select}
                       >
                         <option value="">-- Unlinked (Orange) --</option>
-                        {monitors.map((monitor) => (
+                        {getMonitorsForCard(card).map((monitor) => (
                           <option key={monitor.name} value={monitor.name}>
                             {monitor.name} ({monitor.status})
                           </option>
