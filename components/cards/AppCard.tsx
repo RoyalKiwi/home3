@@ -6,10 +6,12 @@ import styles from './AppCard.module.css';
 
 interface AppCardProps {
   card: Card;
+  status?: 'online' | 'warning' | 'offline';
 }
 
-export default function AppCard({ card }: AppCardProps) {
-  const [status, setStatus] = useState<'online' | 'warning' | 'offline'>('offline');
+export default function AppCard({ card, status }: AppCardProps) {
+  // Use provided status or default to warning (no source configured)
+  const effectiveStatus = status ?? 'warning';
 
   // Parse gradient colors
   const getGradientStyle = () => {
@@ -64,7 +66,7 @@ export default function AppCard({ card }: AppCardProps) {
       {/* Status Indicator (if enabled) - positioned absolutely relative to card */}
       {card.show_status && (
         <div className={styles.statusIndicator}>
-          <span className={`${styles.statusDot} ${styles[status]}`}></span>
+          <span className={`${styles.statusDot} ${styles[effectiveStatus]}`}></span>
         </div>
       )}
 

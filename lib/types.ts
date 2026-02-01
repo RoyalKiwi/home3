@@ -33,6 +33,8 @@ export interface Card {
   gradient_style: GradientStyle;
   size: CardSize;
   show_status: boolean;
+  status_source_id: number | null;
+  status_monitor_name: string | null;
   order_index: number;
   created_at: string;
   updated_at: string;

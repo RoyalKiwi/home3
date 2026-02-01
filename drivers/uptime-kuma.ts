@@ -20,6 +20,16 @@ export class UptimeKumaDriver extends BaseDriver {
   }
 
   /**
+   * Parse monitor name from Prometheus label string
+   * @param labels - Raw label string like 'monitor_name="Plex",monitor_type="http"'
+   * @returns Extracted monitor name or null if not found
+   */
+  static parseMonitorName(labels: string): string | null {
+    const match = labels.match(/monitor_name="([^"]+)"/);
+    return match ? match[1] : null;
+  }
+
+  /**
    * Test connection to Uptime Kuma
    */
   async testConnection(): Promise<IntegrationTestResult> {
@@ -127,6 +137,43 @@ export class UptimeKumaDriver extends BaseDriver {
       value: JSON.stringify(monitors),
       metadata: { count: monitors.length },
     };
+  }
+
+  /**
+   * Fetch monitor list with parsed names for status mapping UI
+   * @returns Array of monitors with name and status
+   */
+  async fetchMonitorList(): Promise<{ name: string; status: 'up' | 'down' }[]> {
+    const url = `${this.config.url}/metrics`;
+    const auth = Buffer.from(`:${this.config.apiKey}`).toString('base64');
+
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Basic ${auth}`,
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch monitor list: ${response.statusText}`);
+    }
+
+    const metricsText = await response.text();
+    const statusRegex = /monitor_status\{([^}]+)\}\s+(\d+)/g;
+    const monitors: { name: string; status: 'up' | 'down' }[] = [];
+    let match;
+
+    while ((match = statusRegex.exec(metricsText)) !== null) {
+      const name = UptimeKumaDriver.parseMonitorName(match[1]);
+      if (name) {
+        monitors.push({
+          name,
+          status: match[2] === '1' ? 'up' : 'down',
+        });
+      }
+    }
+
+    return monitors;
   }
 
   /**

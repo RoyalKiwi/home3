@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AppCard from './AppCard';
+import { useStatusStream } from './useStatusStream';
 import type { Card } from '@/lib/types';
 import styles from './HomeGrid.module.css';
 
@@ -18,6 +19,9 @@ export default function HomeGrid() {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsedSubcategories, setCollapsedSubcategories] = useState<Set<number>>(new Set());
+
+  // Connect to status stream
+  const statusMap = useStatusStream();
 
   // Load collapsed state from LocalStorage
   useEffect(() => {
@@ -188,7 +192,11 @@ export default function HomeGrid() {
             {!isCollapsed && (
               <div className={styles.cardsGrid}>
                 {filteredCards.map((card) => (
-                  <AppCard key={card.id} card={card} />
+                  <AppCard
+                    key={card.id}
+                    card={card}
+                    status={statusMap.get(card.id)}
+                  />
                 ))}
               </div>
             )}
