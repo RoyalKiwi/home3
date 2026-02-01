@@ -28,7 +28,7 @@ export default function ConfigurationPage() {
   const [monitorsByIntegration, setMonitorsByIntegration] = useState<Map<number, Monitor[]>>(new Map());
   const [loadingMappings, setLoadingMappings] = useState(false);
   const [savingMappings, setSavingMappings] = useState(false);
-  const [mappingsExpanded, setMappingsExpanded] = useState(true);
+  const [mappingsExpanded, setMappingsExpanded] = useState(false);
 
   useEffect(() => {
     fetchIntegrations();
