@@ -195,6 +195,9 @@ class StatusPoller {
     // Compute diff and broadcast
     const diff = this.computeDiff(previousCache, this.cardStatusCache);
     if (diff) {
+      // Evaluate notification rules for status changes
+      await this.evaluateNotificationRules(diff, previousCache);
+
       this.broadcast(diff);
     }
 
@@ -346,6 +349,45 @@ class StatusPoller {
         this.sseClients.delete(client);
       }
     });
+  }
+
+  /**
+   * Evaluate notification rules for status changes
+   */
+  private async evaluateNotificationRules(
+    diff: Record<number, CardStatus>,
+    previousCache: Map<number, CardStatus>
+  ) {
+    try {
+      const { evaluateBulkStatusChanges } = await import('./alertEvaluator');
+
+      // Convert diff to status change events
+      const statusChanges: Array<{
+        cardId: number;
+        oldStatus: string;
+        newStatus: string;
+      }> = [];
+
+      for (const [cardIdStr, newStatus] of Object.entries(diff)) {
+        const cardId = Number(cardIdStr);
+        const oldStatus = previousCache.get(cardId);
+
+        if (oldStatus && oldStatus !== newStatus) {
+          statusChanges.push({
+            cardId,
+            oldStatus,
+            newStatus,
+          });
+        }
+      }
+
+      if (statusChanges.length > 0) {
+        await evaluateBulkStatusChanges(statusChanges);
+      }
+    } catch (error) {
+      console.error('[StatusPoller] Failed to evaluate notification rules:', error);
+      // Don't throw - polling should continue even if notifications fail
+    }
   }
 
   /**

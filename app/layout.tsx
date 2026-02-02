@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import MaintenanceBanner from '@/components/layout/MaintenanceBanner';
 
 export const metadata: Metadata = {
   title: 'Homepage3 - Void Dashboard',
@@ -13,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <MaintenanceBanner />
+        {children}
+      </body>
     </html>
   );
 }

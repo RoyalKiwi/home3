@@ -179,3 +179,173 @@ export interface MetricData {
   unit?: string;
   metadata?: Record<string, any>;
 }
+
+// =============================================================================
+// NOTIFICATION SYSTEM TYPES (Phase 7)
+// =============================================================================
+
+// Webhook provider types
+
+export type WebhookProviderType = 'discord' | 'telegram' | 'pushover';
+
+export interface WebhookConfig {
+  id: number;
+  name: string;
+  provider_type: WebhookProviderType;
+  webhook_url: string;              // Encrypted in DB
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Notification rule metric types
+
+export type MetricType =
+  // Server Status (status_change condition)
+  | 'server_offline'                // Card status: online → offline
+  | 'server_online'                 // Card status: offline → online (recovery)
+  | 'server_warning'                // Card status: integration unreachable
+
+  // System Metrics (threshold condition)
+  | 'cpu_temperature'               // CPU temp threshold (°C)
+  | 'cpu_usage'                     // CPU usage percentage (%)
+  | 'memory_usage'                  // RAM usage percentage (%)
+  | 'disk_usage'                    // Disk space percentage (%)
+  | 'drive_temperature'             // HDD/SSD temperature (°C)
+  | 'array_status'                  // Unraid array status (parity errors, etc.)
+  | 'docker_container_status'       // Container stopped/started
+  | 'ups_battery_level'             // UPS battery percentage (%)
+  | 'network_bandwidth';            // Network usage threshold (Mbps)
+
+// Notification rule condition types
+
+export type ConditionType = 'threshold' | 'status_change' | 'presence';
+
+export type ThresholdOperator = 'gt' | 'lt' | 'gte' | 'lte' | 'eq';
+
+export type TargetType = 'all' | 'card' | 'integration';
+
+export type Severity = 'info' | 'warning' | 'critical';
+
+// Notification rule model
+
+export interface NotificationRule {
+  id: number;
+  webhook_id: number;
+  name: string;
+  metric_type: MetricType;
+  condition_type: ConditionType;
+
+  // Threshold configuration
+  threshold_value: number | null;
+  threshold_operator: ThresholdOperator | null;
+
+  // Status change configuration
+  from_status: string | null;
+  to_status: string | null;
+
+  // Targeting
+  target_type: TargetType;
+  target_id: number | null;
+
+  // Behavior
+  is_active: boolean;
+  cooldown_minutes: number;
+  severity: Severity;
+
+  created_at: string;
+  updated_at: string;
+}
+
+// Notification rule with webhook details (for UI)
+
+export interface NotificationRuleWithWebhook extends NotificationRule {
+  webhook_name: string;
+  webhook_provider_type: WebhookProviderType;
+}
+
+// Request payloads
+
+export interface CreateWebhookRequest {
+  name: string;
+  provider_type: WebhookProviderType;
+  webhook_url: string;
+  is_active?: boolean;
+}
+
+export interface UpdateWebhookRequest {
+  name?: string;
+  webhook_url?: string;
+  is_active?: boolean;
+}
+
+export interface CreateNotificationRuleRequest {
+  webhook_id: number;
+  name: string;
+  metric_type: MetricType;
+  condition_type: ConditionType;
+
+  // Threshold fields (required if condition_type = 'threshold')
+  threshold_value?: number;
+  threshold_operator?: ThresholdOperator;
+
+  // Status change fields (required if condition_type = 'status_change')
+  from_status?: string;
+  to_status?: string;
+
+  // Targeting
+  target_type: TargetType;
+  target_id?: number;
+
+  // Behavior
+  is_active?: boolean;
+  cooldown_minutes?: number;
+  severity?: Severity;
+}
+
+export interface UpdateNotificationRuleRequest {
+  webhook_id?: number;
+  name?: string;
+  metric_type?: MetricType;
+  condition_type?: ConditionType;
+  threshold_value?: number | null;
+  threshold_operator?: ThresholdOperator | null;
+  from_status?: string | null;
+  to_status?: string | null;
+  target_type?: TargetType;
+  target_id?: number | null;
+  is_active?: boolean;
+  cooldown_minutes?: number;
+  severity?: Severity;
+}
+
+// Notification payload (sent to webhook)
+
+export interface NotificationPayload {
+  alertType: MetricType;
+  title: string;
+  message: string;
+  severity: Severity;
+  metadata?: {
+    cardName?: string;
+    cardId?: number;
+    integrationId?: number;
+    oldStatus?: string;
+    newStatus?: string;
+    metricValue?: number;
+    threshold?: number;
+    [key: string]: any;
+  };
+}
+
+// Metric metadata (for UI dropdown)
+
+export interface MetricMetadata {
+  type: MetricType;
+  displayName: string;
+  category: 'status' | 'performance' | 'health';
+  conditionType: ConditionType;
+  operators?: ThresholdOperator[];
+  unit?: string;
+  description: string;
+}
