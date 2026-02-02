@@ -272,7 +272,7 @@ class PushoverProvider implements WebhookProvider {
 // =============================================================================
 
 class WebhookProviderFactory {
-  private static providers: Map<WebhookProviderType, WebhookProvider> = new Map([
+  private static providers: Map<WebhookProviderType, WebhookProvider> = new Map<WebhookProviderType, WebhookProvider>([
     ['discord', new DiscordProvider()],
     ['telegram', new TelegramProvider()],
     ['pushover', new PushoverProvider()],
