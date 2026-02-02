@@ -1,0 +1,190 @@
+.section {
+  margin-bottom: 48px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sectionHeader h2 {
+  font-size: 20px;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.description {
+  color: #94A3B8;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 64px 24px;
+  color: #94A3B8;
+}
+
+.hint {
+  font-size: 13px;
+  color: #64748B;
+  margin-top: 8px;
+}
+
+/* Webhook Grid */
+.webhookGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.webhookCard {
+  background: rgba(22, 27, 34, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s;
+}
+
+.webhookCard:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.webhookHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.webhookIcon {
+  font-size: 24px;
+}
+
+.webhookName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #FFFFFF;
+  flex: 1;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22C55E;
+  animation: pulse 2s infinite;
+}
+
+.statusDotInactive {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #94A3B8;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.webhookProvider {
+  font-size: 12px;
+  color: #94A3B8;
+  text-transform: capitalize;
+  margin-bottom: 8px;
+}
+
+.webhookUrl {
+  font-size: 13px;
+  color: #94A3B8;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 16px;
+}
+
+.webhookActions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Buttons */
+.btnPrimary {
+  padding: 10px 20px;
+  font-size: 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  background: #3B82F6;
+  color: #FFFFFF;
+}
+
+.btnPrimary:hover {
+  background: #2563EB;
+  transform: scale(1.02);
+}
+
+.btnSmall {
+  padding: 6px 12px;
+  font-size: 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  background: rgba(59, 130, 246, 0.2);
+  color: #3B82F6;
+}
+
+.btnSmall:hover {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+.btnSmallDanger {
+  padding: 6px 12px;
+  font-size: 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  background: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+}
+
+.btnSmallDanger:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+/* Modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: rgba(22, 27, 34, 0.95);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 600px;
+  width: 100%;
+}

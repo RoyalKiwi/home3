@@ -1,125 +1,56 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
-import type { MetricMetadata } from '@/lib/types';
+import { MetricRegistry } from '@/lib/services/metricRegistry';
+import type { ParsedMetricDefinition } from '@/lib/types';
 
 /**
  * GET /api/notification-rules/metrics
  * Get metadata about available metric types for notification rules (admin-only)
  * Used by UI to populate dropdowns and show appropriate condition fields
+ *
+ * Query params:
+ *  - integration_type: Filter by integration type (netdata, unraid, uptime-kuma, or "all")
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await requireAuth();
 
-    const metrics: MetricMetadata[] = [
-      // Status Change Metrics
-      {
-        type: 'server_offline',
-        displayName: 'Server Offline',
-        category: 'status',
-        conditionType: 'status_change',
-        description: 'Triggered when a card status changes from online to offline',
-      },
-      {
-        type: 'server_online',
-        displayName: 'Server Online',
-        category: 'status',
-        conditionType: 'status_change',
-        description: 'Triggered when a card status changes from offline to online (recovery)',
-      },
-      {
-        type: 'server_warning',
-        displayName: 'Server Warning',
-        category: 'status',
-        conditionType: 'status_change',
-        description: 'Triggered when a card status becomes warning (integration unreachable)',
-      },
+    const { searchParams } = new URL(request.url);
+    const integrationType = searchParams.get('integration_type');
 
-      // Performance Metrics (Threshold)
-      {
-        type: 'cpu_temperature',
-        displayName: 'CPU Temperature',
-        category: 'performance',
-        conditionType: 'threshold',
-        operators: ['gt', 'lt', 'gte', 'lte', 'eq'],
-        unit: '°C',
-        description: 'Monitor CPU temperature and alert when threshold is exceeded',
-      },
-      {
-        type: 'cpu_usage',
-        displayName: 'CPU Usage',
-        category: 'performance',
-        conditionType: 'threshold',
-        operators: ['gt', 'lt', 'gte', 'lte', 'eq'],
-        unit: '%',
-        description: 'Monitor CPU usage percentage',
-      },
-      {
-        type: 'memory_usage',
-        displayName: 'Memory Usage',
-        category: 'performance',
-        conditionType: 'threshold',
-        operators: ['gt', 'lt', 'gte', 'lte', 'eq'],
-        unit: '%',
-        description: 'Monitor RAM usage percentage',
-      },
-      {
-        type: 'disk_usage',
-        displayName: 'Disk Usage',
-        category: 'performance',
-        conditionType: 'threshold',
-        operators: ['gt', 'lt', 'gte', 'lte', 'eq'],
-        unit: '%',
-        description: 'Monitor disk space usage percentage',
-      },
-      {
-        type: 'network_bandwidth',
-        displayName: 'Network Bandwidth',
-        category: 'performance',
-        conditionType: 'threshold',
-        operators: ['gt', 'lt', 'gte', 'lte', 'eq'],
-        unit: 'Mbps',
-        description: 'Monitor network bandwidth usage',
-      },
+    // Get metrics from database via MetricRegistry
+    const metrics = integrationType
+      ? MetricRegistry.getMetricsByIntegrationType(integrationType)
+      : MetricRegistry.getAllMetrics();
 
-      // Health Metrics (Threshold)
-      {
-        type: 'drive_temperature',
-        displayName: 'Drive Temperature',
-        category: 'health',
-        conditionType: 'threshold',
-        operators: ['gt', 'lt', 'gte', 'lte', 'eq'],
-        unit: '°C',
-        description: 'Monitor HDD/SSD temperature',
-      },
-      {
-        type: 'ups_battery_level',
-        displayName: 'UPS Battery Level',
-        category: 'health',
-        conditionType: 'threshold',
-        operators: ['lt', 'lte', 'eq'],
-        unit: '%',
-        description: 'Monitor UPS battery percentage',
-      },
-      {
-        type: 'array_status',
-        displayName: 'Array Status',
-        category: 'health',
-        conditionType: 'status_change',
-        description: 'Monitor Unraid array status (parity errors, disk failures)',
-      },
-      {
-        type: 'docker_container_status',
-        displayName: 'Docker Container Status',
-        category: 'health',
-        conditionType: 'status_change',
-        description: 'Monitor Docker container start/stop events',
-      },
-    ];
+    // Parse operators JSON string to array for each metric
+    const parsedMetrics: ParsedMetricDefinition[] = metrics.map((metric) => ({
+      ...metric,
+      operators: JSON.parse(metric.operators || '[]'),
+    }));
+
+    // Transform to response format compatible with UI
+    const response = parsedMetrics.map((metric) => ({
+      id: metric.id,
+      metricKey: metric.metric_key,
+      displayName: metric.display_name,
+      integrationType: metric.integration_type,
+      driverCapability: metric.driver_capability,
+      category: metric.category,
+      conditionType: metric.condition_type,
+      operators: metric.operators,
+      unit: metric.unit,
+      description: metric.description,
+    }));
 
     return NextResponse.json({
       success: true,
-      data: metrics,
+      data: response,
+      meta: {
+        total: response.length,
+        filtered: !!integrationType,
+        integrationType: integrationType || 'all',
+      },
     });
   } catch (error) {
     console.error('Error fetching metric metadata:', error);

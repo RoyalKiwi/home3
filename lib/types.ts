@@ -233,7 +233,8 @@ export interface NotificationRule {
   id: number;
   webhook_id: number;
   name: string;
-  metric_type: MetricType;
+  metric_type: MetricType;                   // Legacy field (deprecated, use metric_definition_id)
+  metric_definition_id: number | null;       // FK to metric_definitions (Phase 1 expansion)
   condition_type: ConditionType;
 
   // Threshold configuration
@@ -348,4 +349,33 @@ export interface MetricMetadata {
   operators?: ThresholdOperator[];
   unit?: string;
   description: string;
+}
+
+// =============================================================================
+// DYNAMIC METRICS SYSTEM (Phase 1 Expansion)
+// =============================================================================
+
+/**
+ * Metric definition from database
+ * Replaces hardcoded MetricType with dynamic, integration-driven metrics
+ */
+export interface MetricDefinition {
+  id: number;
+  metric_key: string;                        // e.g., 'netdata_cpu_usage', 'unraid_disk_usage'
+  display_name: string;                      // e.g., 'CPU Usage', 'Disk Usage'
+  integration_type: string | null;           // e.g., 'netdata', 'unraid', NULL for generic
+  driver_capability: string | null;          // Maps to driver capability (e.g., 'cpu_usage')
+  category: 'system' | 'status' | 'health' | 'network'; // Metric category
+  condition_type: ConditionType;             // 'threshold', 'status_change', 'presence'
+  operators: string;                         // JSON array of operators: ["gt", "lt", "gte", "lte", "eq"]
+  unit: string | null;                       // e.g., '%', '°C', 'MB', 'Mbps', NULL for status
+  description: string | null;                // Helper text for admin UI
+  is_active: boolean;                        // Whether metric is available
+}
+
+/**
+ * Parsed metric definition with operators as array
+ */
+export interface ParsedMetricDefinition extends Omit<MetricDefinition, 'operators'> {
+  operators: string[];                       // Parsed from JSON string
 }

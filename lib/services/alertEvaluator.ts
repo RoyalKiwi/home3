@@ -1,12 +1,14 @@
 /**
- * Alert Evaluator Service - Phase 7
+ * Alert Evaluator Service - Phase 7 + Phase 1 Expansion
  *
  * Purpose: Centralized logic for evaluating notification rules against metrics
  * Evaluates: Threshold rules (CPU > 80°C) and status change rules (online → offline)
+ * Phase 1: Added support for dynamic metrics from metric_definitions table
  */
 
 import { getDb } from '../db';
 import { notificationService } from './notifications';
+import { MetricRegistry } from './metricRegistry';
 import type { MetricType, ThresholdOperator, Severity } from '../types';
 
 // =============================================================================
@@ -42,11 +44,23 @@ function evaluateOperator(
 }
 
 /**
- * Get unit for metric type
- * @param metricType The type of metric
+ * Get unit for metric type (Phase 1: Dynamic lookup)
+ * @param metricKey The metric key (can be legacy MetricType or new metric_key)
+ * @param metricDefinitionId Optional metric definition ID for direct lookup
  * @returns Unit string (°C, %, Mbps, etc.)
  */
-function getUnit(metricType: MetricType): string {
+function getUnit(metricKey: string, metricDefinitionId?: number | null): string {
+  // Try dynamic lookup first
+  if (metricDefinitionId) {
+    const metric = MetricRegistry.getMetricById(metricDefinitionId);
+    if (metric?.unit) return metric.unit;
+  }
+
+  // Try lookup by key
+  const metric = MetricRegistry.getMetricByKey(metricKey);
+  if (metric?.unit) return metric.unit;
+
+  // Fallback to legacy hardcoded values for backward compatibility
   const units: Record<string, string> = {
     cpu_temperature: '°C',
     drive_temperature: '°C',
@@ -56,15 +70,27 @@ function getUnit(metricType: MetricType): string {
     ups_battery_level: '%',
     network_bandwidth: 'Mbps',
   };
-  return units[metricType] || '';
+  return units[metricKey] || '';
 }
 
 /**
- * Get display name for metric type
- * @param metricType The type of metric
+ * Get display name for metric type (Phase 1: Dynamic lookup)
+ * @param metricKey The metric key (can be legacy MetricType or new metric_key)
+ * @param metricDefinitionId Optional metric definition ID for direct lookup
  * @returns Human-readable name
  */
-function getMetricDisplayName(metricType: MetricType): string {
+function getMetricDisplayName(metricKey: string, metricDefinitionId?: number | null): string {
+  // Try dynamic lookup first
+  if (metricDefinitionId) {
+    const metric = MetricRegistry.getMetricById(metricDefinitionId);
+    if (metric?.display_name) return metric.display_name;
+  }
+
+  // Try lookup by key
+  const metric = MetricRegistry.getMetricByKey(metricKey);
+  if (metric?.display_name) return metric.display_name;
+
+  // Fallback to legacy hardcoded values for backward compatibility
   const names: Record<string, string> = {
     cpu_temperature: 'CPU Temperature',
     drive_temperature: 'Drive Temperature',
@@ -79,7 +105,7 @@ function getMetricDisplayName(metricType: MetricType): string {
     server_online: 'Server Online',
     server_warning: 'Server Warning',
   };
-  return names[metricType] || metricType;
+  return names[metricKey] || metricKey;
 }
 
 /**
@@ -157,8 +183,12 @@ export async function evaluateThresholdRules(
       );
 
       if (conditionMet) {
-        const unit = getUnit(rule.metric_type);
-        const metricDisplayName = getMetricDisplayName(rule.metric_type);
+        // Phase 1: Support both legacy metric_type and new metric_definition_id
+        const metricKey = rule.metric_type;
+        const metricDefId = rule.metric_definition_id;
+
+        const unit = getUnit(metricKey, metricDefId);
+        const metricDisplayName = getMetricDisplayName(metricKey, metricDefId);
         const operatorSymbol = getOperatorSymbol(rule.threshold_operator);
 
         await notificationService.sendAlert(rule.id, {
@@ -172,6 +202,7 @@ export async function evaluateThresholdRules(
             metricValue,
             threshold: rule.threshold_value,
             metricType: rule.metric_type,
+            metricDefinitionId: metricDefId,
           },
         });
       }
