@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { notificationService } from '@/lib/services/notifications';
 import { getDb } from '@/lib/db';
-import type { Severity } from '@/lib/types';
+import { MetricRegistry } from '@/lib/services/metricRegistry';
+import type { Severity, MetricType } from '@/lib/types';
 
 /**
  * POST /api/notification-rules/[id]/test
@@ -37,11 +38,20 @@ export async function POST(
       return NextResponse.json({ error: 'Notification rule not found' }, { status: 404 });
     }
 
+    // Get metric key for alertType (support both legacy and new system)
+    let metricKey = rule.metric_type;
+
+    // If using new metric_definition_id, look up the metric key
+    if (!metricKey && rule.metric_definition_id) {
+      const metricDef = MetricRegistry.getMetricById(rule.metric_definition_id);
+      metricKey = metricDef?.metric_key || 'unknown_metric';
+    }
+
     // Send test notification (bypass flood control)
     await notificationService.sendAlert(
       ruleId,
       {
-        alertType: rule.metric_type,
+        alertType: metricKey as MetricType,
         title: `TEST: ${rule.name}`,
         message: `This is a test notification for rule "${rule.name}". If you see this, the rule is configured correctly.`,
         severity: rule.severity as Severity,
@@ -49,6 +59,7 @@ export async function POST(
           test: true,
           ruleId,
           ruleName: rule.name,
+          metricDefinitionId: rule.metric_definition_id,
         },
       },
       true // Bypass flood control

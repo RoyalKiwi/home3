@@ -8,6 +8,7 @@
 
 import { getDb } from '../db';
 import { decrypt } from '../crypto';
+import { renderNotification } from './templateRenderer';
 import type {
   WebhookProviderType,
   NotificationPayload,
@@ -387,6 +388,16 @@ class NotificationService {
         return;
       }
 
+      // Render notification using template (if template_id is set)
+      const rendered = renderNotification(payload, rule.template_id);
+
+      // Create final payload with rendered content
+      const finalPayload: NotificationPayload = {
+        ...payload,
+        title: rendered.title,
+        message: rendered.message,
+      };
+
       // Decrypt webhook URL
       const webhookUrl = decrypt(rule.webhook_url);
 
@@ -394,14 +405,59 @@ class NotificationService {
       const provider = WebhookProviderFactory.create(rule.provider_type);
 
       // Send with retry logic
-      await this.sendWithRetry(provider, webhookUrl, payload);
+      let deliveryStatus = 'sent';
+      let deliveryError = null;
+      let attemptCount = 1;
+
+      try {
+        await this.sendWithRetry(provider, webhookUrl, finalPayload);
+      } catch (error) {
+        deliveryStatus = 'failed';
+        deliveryError = error instanceof Error ? error.message : 'Unknown error';
+        attemptCount = this.retryAttempts;
+        throw error; // Re-throw to maintain existing error handling
+      } finally {
+        // Log to notification history
+        try {
+          db.prepare(`
+            INSERT INTO notification_history (
+              rule_id,
+              webhook_id,
+              alert_type,
+              title,
+              message,
+              severity,
+              provider_type,
+              status,
+              attempts,
+              error_message,
+              metadata
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).run(
+            ruleId,
+            rule.webhook_id,
+            finalPayload.alertType,
+            finalPayload.title,
+            finalPayload.message,
+            finalPayload.severity,
+            rule.provider_type,
+            deliveryStatus,
+            attemptCount,
+            deliveryError,
+            JSON.stringify(finalPayload.metadata || {})
+          );
+        } catch (historyError) {
+          console.error('[Notifications] Failed to log to history:', historyError);
+          // Don't throw - history logging failure shouldn't prevent notifications
+        }
+      }
 
       // Record alert (update flood control state)
       if (!bypassFloodControl) {
         this.floodControl.recordAlert(ruleId);
       }
 
-      console.log(`[Notifications] Alert sent via ${rule.webhook_name} (${provider.name}): ${payload.title}`);
+      console.log(`[Notifications] Alert sent via ${rule.webhook_name} (${provider.name}): ${finalPayload.title}`);
     } catch (error) {
       console.error(`[Notifications] Failed to send alert for rule ${ruleId}:`, error);
       // Don't throw - we want system to continue even if notifications fail

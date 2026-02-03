@@ -168,7 +168,28 @@ export async function evaluateThresholdRules(
 
     // Evaluate each rule
     for (const rule of rules) {
-      const metricValue = metrics[rule.metric_type];
+      // Phase 1: Support both legacy metric_type and new metric_definition_id
+      const metricDefId = rule.metric_definition_id;
+      const metricKey = rule.metric_type;
+
+      // Get metric definition to find the driver capability
+      let metricDef = null;
+      let driverCapability = null;
+
+      if (metricDefId) {
+        metricDef = MetricRegistry.getMetricById(metricDefId);
+        driverCapability = metricDef?.driver_capability;
+      } else if (metricKey) {
+        // Try to find by legacy metric_type (may be a metric_key)
+        metricDef = MetricRegistry.getMetricByKey(metricKey);
+        driverCapability = metricDef?.driver_capability;
+      }
+
+      // Look up metric value using driver capability if available, otherwise use metric_type
+      // Integration drivers return metrics with capability names (e.g., "cpu_usage")
+      // But metric definitions have prefixed keys (e.g., "netdata_cpu_usage")
+      const metricLookupKey = driverCapability || metricKey;
+      const metricValue = metrics[metricLookupKey];
 
       // Skip if metric not present in data
       if (metricValue === undefined || metricValue === null) {
@@ -183,16 +204,12 @@ export async function evaluateThresholdRules(
       );
 
       if (conditionMet) {
-        // Phase 1: Support both legacy metric_type and new metric_definition_id
-        const metricKey = rule.metric_type;
-        const metricDefId = rule.metric_definition_id;
-
         const unit = getUnit(metricKey, metricDefId);
         const metricDisplayName = getMetricDisplayName(metricKey, metricDefId);
         const operatorSymbol = getOperatorSymbol(rule.threshold_operator);
 
         await notificationService.sendAlert(rule.id, {
-          alertType: rule.metric_type,
+          alertType: metricKey as MetricType,
           title: rule.name,
           message: `${integrationName}: ${metricDisplayName} is ${metricValue}${unit} (${operatorSymbol} ${rule.threshold_value}${unit})`,
           severity: rule.severity as Severity,
@@ -201,8 +218,10 @@ export async function evaluateThresholdRules(
             integrationName,
             metricValue,
             threshold: rule.threshold_value,
-            metricType: rule.metric_type,
+            unit,
+            metricType: metricKey,
             metricDefinitionId: metricDefId,
+            metricDisplayName,
           },
         });
       }

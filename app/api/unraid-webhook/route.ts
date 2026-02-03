@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
 import { processUnraidEvent, validateUnraidEvent } from '@/lib/services/unraidEventEvaluator';
 
 /**
@@ -105,8 +106,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Add requireAuth() when ready to test
-    // await requireAuth();
+    await requireAuth();
 
     const db = getDb();
 
@@ -152,6 +152,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('[UnraidWebhook] Error fetching configuration:', error);
 
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     return NextResponse.json(
       { error: 'Failed to fetch webhook configuration' },
       { status: 500 }
@@ -166,8 +170,7 @@ export async function GET(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
-    // TODO: Add requireAuth() when ready to test
-    // await requireAuth();
+    await requireAuth();
 
     const body = await request.json();
     const db = getDb();
@@ -207,6 +210,10 @@ export async function PATCH(request: NextRequest) {
     });
   } catch (error) {
     console.error('[UnraidWebhook] Error updating configuration:', error);
+
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
 
     return NextResponse.json(
       { error: 'Failed to update webhook configuration' },
