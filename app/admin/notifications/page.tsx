@@ -94,20 +94,18 @@ export default function NotificationsPage() {
     try {
       const res = await fetch('/api/notification-templates');
       if (!res.ok) {
-        console.error('Failed to load templates:', res.status, res.statusText);
-        alert(`Failed to load templates: ${res.status} ${res.statusText}`);
+        console.error('[Templates] Failed to load:', res.status, res.statusText);
         return;
       }
       const data = await res.json();
-      console.log('Templates loaded:', data);
+      console.log('[Templates] Loaded:', data.data?.length || 0, 'templates');
       setTemplates(data.data || []);
 
       if ((data.data || []).length === 0) {
-        console.warn('No templates found. Run POST /api/notifications/init to seed templates');
+        console.warn('[Templates] No templates found. Check server logs for initialization status.');
       }
     } catch (error) {
-      console.error('Failed to load templates:', error);
-      alert(`Failed to load templates: ${error}`);
+      console.error('[Templates] Load error:', error);
     }
   }
 
@@ -115,20 +113,18 @@ export default function NotificationsPage() {
     try {
       const res = await fetch('/api/notification-rules/metrics');
       if (!res.ok) {
-        console.error('Failed to load metrics:', res.status, res.statusText);
-        alert(`Failed to load metrics: ${res.status} ${res.statusText}`);
+        console.error('[Metrics] Failed to load:', res.status, res.statusText);
         return;
       }
       const data = await res.json();
-      console.log('Metrics loaded:', data);
+      console.log('[Metrics] Loaded:', data.data?.length || 0, 'metrics');
       setMetrics(data.data || []);
 
       if ((data.data || []).length === 0) {
-        console.warn('No metrics found. Check migrations 008-009 and ensure MetricRegistry synced');
+        console.warn('[Metrics] No metrics found. Check server logs for MetricRegistry sync status.');
       }
     } catch (error) {
-      console.error('Failed to load metrics:', error);
-      alert(`Failed to load metrics: ${error}`);
+      console.error('[Metrics] Load error:', error);
     }
   }
 
