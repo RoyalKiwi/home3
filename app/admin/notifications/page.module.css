@@ -598,6 +598,13 @@
 .inlineSelect option {
   background: #1E293B;
   color: #FFFFFF;
+  padding: 8px;
+}
+
+.inlineSelectSmall option {
+  background: #1E293B;
+  color: #FFFFFF;
+  padding: 6px;
 }
 
 .inlineInputSmall,

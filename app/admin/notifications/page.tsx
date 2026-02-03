@@ -93,20 +93,42 @@ export default function NotificationsPage() {
   async function loadTemplates() {
     try {
       const res = await fetch('/api/notification-templates');
+      if (!res.ok) {
+        console.error('Failed to load templates:', res.status, res.statusText);
+        alert(`Failed to load templates: ${res.status} ${res.statusText}`);
+        return;
+      }
       const data = await res.json();
+      console.log('Templates loaded:', data);
       setTemplates(data.data || []);
+
+      if ((data.data || []).length === 0) {
+        console.warn('No templates found. Run POST /api/notifications/init to seed templates');
+      }
     } catch (error) {
       console.error('Failed to load templates:', error);
+      alert(`Failed to load templates: ${error}`);
     }
   }
 
   async function loadMetrics() {
     try {
       const res = await fetch('/api/notification-rules/metrics');
+      if (!res.ok) {
+        console.error('Failed to load metrics:', res.status, res.statusText);
+        alert(`Failed to load metrics: ${res.status} ${res.statusText}`);
+        return;
+      }
       const data = await res.json();
+      console.log('Metrics loaded:', data);
       setMetrics(data.data || []);
+
+      if ((data.data || []).length === 0) {
+        console.warn('No metrics found. Check migrations 008-009 and ensure MetricRegistry synced');
+      }
     } catch (error) {
       console.error('Failed to load metrics:', error);
+      alert(`Failed to load metrics: ${error}`);
     }
   }
 
