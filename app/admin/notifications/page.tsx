@@ -585,12 +585,65 @@ export default function NotificationsPage() {
           <div className={styles.tabContent}>
             <div className={styles.sectionHeader}>
               <h2>Notification Templates</h2>
+              <p className={styles.hint}>
+                Templates allow you to customize notification messages with variables like {'{{'}}severity{'}}'}, {'{{'}}metricName{'}}'}, {'{{'}}cardName{'}}'}, etc.
+              </p>
             </div>
-            <p className={styles.hint}>
-              Templates allow you to customize notification messages with variables.
-            </p>
-            <div className={styles.comingSoon}>
-              Template management UI coming soon. For now, templates are managed via API.
+
+            {templates.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p>No templates found.</p>
+                <p className={styles.hint}>Templates should be auto-seeded on startup. Check server logs.</p>
+              </div>
+            ) : (
+              <div className={styles.templateList}>
+                {templates.map((template: any) => (
+                  <div key={template.id} className={styles.templateCard}>
+                    <div className={styles.templateHeader}>
+                      <div>
+                        <h3 className={styles.templateName}>
+                          {template.name}
+                          {template.is_default && (
+                            <span className={styles.defaultBadge}>Default</span>
+                          )}
+                        </h3>
+                      </div>
+                      <div className={styles.templateActions}>
+                        <span className={template.is_active ? styles.statusActive : styles.statusInactive}>
+                          {template.is_active ? '● Active' : '○ Inactive'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className={styles.templateContent}>
+                      <div className={styles.templateField}>
+                        <label>Title Template:</label>
+                        <code className={styles.templateCode}>{template.title_template}</code>
+                      </div>
+                      <div className={styles.templateField}>
+                        <label>Message Template:</label>
+                        <code className={styles.templateCode}>{template.message_template}</code>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className={styles.templateInfo}>
+              <h3>Available Variables:</h3>
+              <div className={styles.variableGrid}>
+                <div><code>{'{{'}}severity{'}}'}</code> - Alert severity (info, warning, critical)</div>
+                <div><code>{'{{'}}metricName{'}}'}</code> - Metric key</div>
+                <div><code>{'{{'}}metricDisplayName{'}}'}</code> - Human-readable metric name</div>
+                <div><code>{'{{'}}metricValue{'}}'}</code> - Current metric value</div>
+                <div><code>{'{{'}}threshold{'}}'}</code> - Threshold value</div>
+                <div><code>{'{{'}}unit{'}}'}</code> - Unit (%, °C, Mbps, etc.)</div>
+                <div><code>{'{{'}}cardName{'}}'}</code> - Card display name</div>
+                <div><code>{'{{'}}integrationName{'}}'}</code> - Integration name</div>
+                <div><code>{'{{'}}oldStatus{'}}'}</code> - Previous status</div>
+                <div><code>{'{{'}}newStatus{'}}'}</code> - New status</div>
+                <div><code>{'{{'}}timestamp{'}}'}</code> - ISO timestamp</div>
+              </div>
             </div>
           </div>
         )}

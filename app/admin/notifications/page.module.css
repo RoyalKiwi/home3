@@ -705,3 +705,126 @@
   color: #94A3B8;
   font-size: 16px;
 }
+/* Template Display Styles */
+
+.templateList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.templateCard {
+  background: rgba(22, 27, 34, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s;
+}
+
+.templateCard:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.templateHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.templateName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #E2E8F0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.defaultBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 4px;
+}
+
+.templateActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.templateContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.templateField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.templateField label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.templateCode {
+  display: block;
+  padding: 12px;
+  background: #0F172A;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #CBD5E1;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.6;
+}
+
+.templateInfo {
+  margin-top: 32px;
+  padding: 20px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+}
+
+.templateInfo h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #E2E8F0;
+  margin: 0 0 16px 0;
+}
+
+.variableGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+  font-size: 13px;
+  color: #CBD5E1;
+}
+
+.variableGrid code {
+  color: #3B82F6;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
