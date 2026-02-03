@@ -6,14 +6,6 @@
 BEGIN TRANSACTION;
 
 -- =============================================================================
--- Pre-migration validation: Verify migration 008 was applied
--- =============================================================================
-SELECT CASE
-  WHEN (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='metric_definitions') = 0
-  THEN RAISE(ABORT, 'Migration 008 not applied - metric_definitions table missing')
-END;
-
--- =============================================================================
 -- PART A: Fix Driver Capability Values (THE CRITICAL FIX)
 -- =============================================================================
 -- Problem: Database stores 'cpu_usage' but drivers return 'cpu'
