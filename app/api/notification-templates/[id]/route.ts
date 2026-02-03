@@ -8,11 +8,12 @@ import { requireAuth } from '@/lib/auth';
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAuth();
 
+    const { id } = await params;
     const body = await request.json();
     const db = getDb();
 
@@ -27,7 +28,7 @@ export async function PATCH(
     // Check if template exists
     const existing = db.prepare(
       'SELECT id FROM notification_templates WHERE id = ?'
-    ).get(params.id);
+    ).get(id);
 
     if (!existing) {
       return NextResponse.json(
@@ -60,13 +61,13 @@ export async function PATCH(
       body.message_template,
       body.is_default ? 1 : 0,
       body.is_active !== undefined ? (body.is_active ? 1 : 0) : 1,
-      params.id
+      id
     );
 
     // Fetch updated template
     const updated = db.prepare(
       'SELECT * FROM notification_templates WHERE id = ?'
-    ).get(params.id);
+    ).get(id);
 
     return NextResponse.json({
       success: true,
@@ -95,17 +96,18 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAuth();
 
+    const { id } = await params;
     const db = getDb();
 
     // Check if template exists
     const template = db.prepare(
       'SELECT id, name, is_default FROM notification_templates WHERE id = ?'
-    ).get(params.id) as { id: number; name: string; is_default: number } | undefined;
+    ).get(id) as { id: number; name: string; is_default: number } | undefined;
 
     if (!template) {
       return NextResponse.json(
@@ -125,7 +127,7 @@ export async function DELETE(
     // Check if template is being used by any notification rules
     const usage = db.prepare(
       'SELECT COUNT(*) as count FROM notification_rules WHERE template_id = ?'
-    ).get(params.id) as { count: number };
+    ).get(id) as { count: number };
 
     if (usage.count > 0) {
       return NextResponse.json(
@@ -137,7 +139,7 @@ export async function DELETE(
     }
 
     // Delete the template
-    db.prepare('DELETE FROM notification_templates WHERE id = ?').run(params.id);
+    db.prepare('DELETE FROM notification_templates WHERE id = ?').run(id);
 
     return NextResponse.json({
       success: true,
