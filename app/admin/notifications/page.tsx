@@ -586,7 +586,7 @@ export default function NotificationsPage() {
             <div className={styles.sectionHeader}>
               <h2>Notification Templates</h2>
               <p className={styles.hint}>
-                Templates allow you to customize notification messages with variables like {'{{'}}severity{'}}'}, {'{{'}}metricName{'}}'}, {'{{'}}cardName{'}}'}, etc.
+                Templates allow you to customize notification messages with variables like {'{{severity}}'}, {'{{metricName}}'}, {'{{cardName}}'}, etc.
               </p>
             </div>
 
@@ -632,17 +632,17 @@ export default function NotificationsPage() {
             <div className={styles.templateInfo}>
               <h3>Available Variables:</h3>
               <div className={styles.variableGrid}>
-                <div><code>{'{{'}}severity{'}}'}</code> - Alert severity (info, warning, critical)</div>
-                <div><code>{'{{'}}metricName{'}}'}</code> - Metric key</div>
-                <div><code>{'{{'}}metricDisplayName{'}}'}</code> - Human-readable metric name</div>
-                <div><code>{'{{'}}metricValue{'}}'}</code> - Current metric value</div>
-                <div><code>{'{{'}}threshold{'}}'}</code> - Threshold value</div>
-                <div><code>{'{{'}}unit{'}}'}</code> - Unit (%, °C, Mbps, etc.)</div>
-                <div><code>{'{{'}}cardName{'}}'}</code> - Card display name</div>
-                <div><code>{'{{'}}integrationName{'}}'}</code> - Integration name</div>
-                <div><code>{'{{'}}oldStatus{'}}'}</code> - Previous status</div>
-                <div><code>{'{{'}}newStatus{'}}'}</code> - New status</div>
-                <div><code>{'{{'}}timestamp{'}}'}</code> - ISO timestamp</div>
+                <div><code>{'{{severity}}'}</code> - Alert severity (info, warning, critical)</div>
+                <div><code>{'{{metricName}}'}</code> - Metric key</div>
+                <div><code>{'{{metricDisplayName}}'}</code> - Human-readable metric name</div>
+                <div><code>{'{{metricValue}}'}</code> - Current metric value</div>
+                <div><code>{'{{threshold}}'}</code> - Threshold value</div>
+                <div><code>{'{{unit}}'}</code> - Unit (%, °C, Mbps, etc.)</div>
+                <div><code>{'{{cardName}}'}</code> - Card display name</div>
+                <div><code>{'{{integrationName}}'}</code> - Integration name</div>
+                <div><code>{'{{oldStatus}}'}</code> - Previous status</div>
+                <div><code>{'{{newStatus}}'}</code> - New status</div>
+                <div><code>{'{{timestamp}}'}</code> - ISO timestamp</div>
               </div>
             </div>
           </div>
