@@ -1,145 +1,76 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import type { NotificationTemplate, UpdateNotificationTemplateRequest } from '@/lib/types';
-
-/**
- * GET /api/notification-templates/[id]
- * Get a single notification template (admin-only)
- */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    await requireAuth();
-
-    const { id } = await params;
-    const templateId = parseInt(id);
-    if (isNaN(templateId)) {
-      return NextResponse.json({ error: 'Invalid template ID' }, { status: 400 });
-    }
-
-    const db = getDb();
-
-    const template = db
-      .prepare('SELECT * FROM notification_templates WHERE id = ?')
-      .get(templateId) as NotificationTemplate | undefined;
-
-    if (!template) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: template,
-    });
-  } catch (error) {
-    console.error('Error fetching notification template:', error);
-
-    if (error instanceof Error && error.message === 'Authentication required') {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
-
-    return NextResponse.json({ error: 'Failed to fetch notification template' }, { status: 500 });
-  }
-}
 
 /**
  * PATCH /api/notification-templates/[id]
- * Update a notification template (admin-only)
+ * Update an existing notification template
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     await requireAuth();
 
-    const { id } = await params;
-    const templateId = parseInt(id);
-    if (isNaN(templateId)) {
-      return NextResponse.json({ error: 'Invalid template ID' }, { status: 400 });
-    }
-
-    const body = (await request.json()) as UpdateNotificationTemplateRequest;
-
+    const body = await request.json();
     const db = getDb();
 
+    // Validate required fields
+    if (!body.name || !body.title_template || !body.message_template) {
+      return NextResponse.json(
+        { error: 'Missing required fields: name, title_template, message_template' },
+        { status: 400 }
+      );
+    }
+
     // Check if template exists
-    const existing = db
-      .prepare('SELECT id FROM notification_templates WHERE id = ?')
-      .get(templateId);
+    const existing = db.prepare(
+      'SELECT id FROM notification_templates WHERE id = ?'
+    ).get(params.id);
 
     if (!existing) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Template not found' },
+        { status: 404 }
+      );
     }
 
     // If setting as default, unset other defaults
-    if (body.is_default === true) {
-      db.prepare('UPDATE notification_templates SET is_default = 0 WHERE id != ?').run(templateId);
+    if (body.is_default) {
+      db.prepare(
+        'UPDATE notification_templates SET is_default = 0 WHERE is_default = 1'
+      ).run();
     }
 
-    // Build update query dynamically
-    const updates: string[] = [];
-    const values: any[] = [];
+    // Update the template
+    db.prepare(\`
+      UPDATE notification_templates
+      SET
+        name = ?,
+        title_template = ?,
+        message_template = ?,
+        is_default = ?,
+        is_active = ?,
+        updated_at = datetime('now')
+      WHERE id = ?
+    \`).run(
+      body.name,
+      body.title_template,
+      body.message_template,
+      body.is_default ? 1 : 0,
+      body.is_active !== undefined ? (body.is_active ? 1 : 0) : 1,
+      params.id
+    );
 
-    if (body.name !== undefined) {
-      // Check if new name already exists
-      const nameExists = db
-        .prepare('SELECT id FROM notification_templates WHERE name = ? AND id != ?')
-        .get(body.name, templateId);
-
-      if (nameExists) {
-        return NextResponse.json(
-          { error: 'A template with this name already exists' },
-          { status: 400 }
-        );
-      }
-
-      updates.push('name = ?');
-      values.push(body.name);
-    }
-
-    if (body.title_template !== undefined) {
-      updates.push('title_template = ?');
-      values.push(body.title_template);
-    }
-
-    if (body.message_template !== undefined) {
-      updates.push('message_template = ?');
-      values.push(body.message_template);
-    }
-
-    if (body.is_default !== undefined) {
-      updates.push('is_default = ?');
-      values.push(body.is_default ? 1 : 0);
-    }
-
-    if (body.is_active !== undefined) {
-      updates.push('is_active = ?');
-      values.push(body.is_active ? 1 : 0);
-    }
-
-    if (updates.length === 0) {
-      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
-    }
-
-    updates.push("updated_at = datetime('now')");
-    values.push(templateId);
-
-    // Execute update
-    db.prepare(
-      `UPDATE notification_templates SET ${updates.join(', ')} WHERE id = ?`
-    ).run(...values);
-
-    const template = db
-      .prepare('SELECT * FROM notification_templates WHERE id = ?')
-      .get(templateId) as NotificationTemplate;
+    // Fetch updated template
+    const updated = db.prepare(
+      'SELECT * FROM notification_templates WHERE id = ?'
+    ).get(params.id);
 
     return NextResponse.json({
       success: true,
-      data: template,
+      data: updated
     });
   } catch (error) {
     console.error('Error updating notification template:', error);
@@ -148,38 +79,42 @@ export async function PATCH(
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    return NextResponse.json({ error: 'Failed to update notification template' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to update template',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
   }
 }
 
 /**
  * DELETE /api/notification-templates/[id]
- * Delete a notification template (admin-only)
+ * Delete a notification template
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     await requireAuth();
 
-    const { id } = await params;
-    const templateId = parseInt(id);
-    if (isNaN(templateId)) {
-      return NextResponse.json({ error: 'Invalid template ID' }, { status: 400 });
-    }
-
     const db = getDb();
 
-    // Check if template exists and is not default
-    const template = db
-      .prepare('SELECT * FROM notification_templates WHERE id = ?')
-      .get(templateId) as NotificationTemplate | undefined;
+    // Check if template exists
+    const template = db.prepare(
+      'SELECT id, name, is_default FROM notification_templates WHERE id = ?'
+    ).get(params.id) as { id: number; name: string; is_default: number } | undefined;
 
     if (!template) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Template not found' },
+        { status: 404 }
+      );
     }
 
+    // Prevent deletion of default template
     if (template.is_default) {
       return NextResponse.json(
         { error: 'Cannot delete the default template. Set another template as default first.' },
@@ -187,28 +122,26 @@ export async function DELETE(
       );
     }
 
-    // Check if any rules use this template
-    const rulesUsingTemplate = db
-      .prepare('SELECT COUNT(*) as count FROM notification_rules WHERE template_id = ?')
-      .get(templateId) as { count: number };
+    // Check if template is being used by any notification rules
+    const usage = db.prepare(
+      'SELECT COUNT(*) as count FROM notification_rules WHERE template_id = ?'
+    ).get(params.id) as { count: number };
 
-    if (rulesUsingTemplate.count > 0) {
+    if (usage.count > 0) {
       return NextResponse.json(
         {
-          error: `Cannot delete template. ${rulesUsingTemplate.count} notification rule(s) are using this template.`,
-          rulesCount: rulesUsingTemplate.count,
+          error: \`Template "\${template.name}" is used by \${usage.count} notification rule(s). Remove it from rules before deleting.\`
         },
         { status: 400 }
       );
     }
 
-    // Delete template
-    db.prepare('DELETE FROM notification_templates WHERE id = ?').run(templateId);
+    // Delete the template
+    db.prepare('DELETE FROM notification_templates WHERE id = ?').run(params.id);
 
     return NextResponse.json({
       success: true,
-      message: `Template "${template.name}" deleted successfully`,
-      data: template,
+      message: \`Template "\${template.name}" deleted successfully\`
     });
   } catch (error) {
     console.error('Error deleting notification template:', error);
@@ -217,6 +150,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    return NextResponse.json({ error: 'Failed to delete notification template' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to delete template',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
   }
 }

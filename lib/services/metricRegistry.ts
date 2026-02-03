@@ -38,7 +38,7 @@ const DRIVER_REGISTRY: Record<string, DriverMetadata> = {
     integrationType: 'netdata',
     capabilities: [
       {
-        capability: 'cpu_usage',
+        capability: 'cpu', // FIXED: was 'cpu_usage', must match driver return value
         displayName: 'CPU Usage',
         category: 'system',
         conditionType: 'threshold',
@@ -47,7 +47,7 @@ const DRIVER_REGISTRY: Record<string, DriverMetadata> = {
         description: 'CPU usage percentage from Netdata'
       },
       {
-        capability: 'memory_usage',
+        capability: 'memory', // FIXED: was 'memory_usage', must match driver return value
         displayName: 'Memory Usage',
         category: 'system',
         conditionType: 'threshold',
@@ -56,7 +56,7 @@ const DRIVER_REGISTRY: Record<string, DriverMetadata> = {
         description: 'RAM usage percentage from Netdata'
       },
       {
-        capability: 'disk_usage',
+        capability: 'disk', // FIXED: was 'disk_usage', must match driver return value
         displayName: 'Disk Usage',
         category: 'system',
         conditionType: 'threshold',
@@ -65,7 +65,7 @@ const DRIVER_REGISTRY: Record<string, DriverMetadata> = {
         description: 'Disk space usage from Netdata'
       },
       {
-        capability: 'network_bandwidth',
+        capability: 'network', // FIXED: was 'network_bandwidth', must match driver return value
         displayName: 'Network Bandwidth',
         category: 'network',
         conditionType: 'threshold',
@@ -79,7 +79,7 @@ const DRIVER_REGISTRY: Record<string, DriverMetadata> = {
     integrationType: 'unraid',
     capabilities: [
       {
-        capability: 'cpu_cores',
+        capability: 'cpu', // FIXED: was 'cpu_cores', must match driver return value
         displayName: 'CPU Core Count',
         category: 'system',
         conditionType: 'threshold',
@@ -87,7 +87,7 @@ const DRIVER_REGISTRY: Record<string, DriverMetadata> = {
         description: 'Number of CPU cores from Unraid'
       },
       {
-        capability: 'memory_usage',
+        capability: 'memory', // FIXED: was 'memory_usage', must match driver return value
         displayName: 'Memory Usage',
         category: 'system',
         conditionType: 'threshold',
@@ -96,7 +96,7 @@ const DRIVER_REGISTRY: Record<string, DriverMetadata> = {
         description: 'RAM usage from Unraid'
       },
       {
-        capability: 'disk_usage',
+        capability: 'disk', // FIXED: was 'disk_usage', must match driver return value
         displayName: 'Disk Usage',
         category: 'system',
         conditionType: 'threshold',
@@ -105,7 +105,7 @@ const DRIVER_REGISTRY: Record<string, DriverMetadata> = {
         description: 'Array disk usage from Unraid'
       },
       {
-        capability: 'docker_containers',
+        capability: 'docker', // FIXED: was 'docker_containers', must match driver return value
         displayName: 'Docker Container Count',
         category: 'system',
         conditionType: 'threshold',
@@ -113,7 +113,7 @@ const DRIVER_REGISTRY: Record<string, DriverMetadata> = {
         description: 'Number of running containers'
       },
       {
-        capability: 'drive_temperature',
+        capability: 'temperature', // FIXED: was 'drive_temperature', must match driver return value
         displayName: 'Drive Temperature',
         category: 'health',
         conditionType: 'threshold',
@@ -127,7 +127,16 @@ const DRIVER_REGISTRY: Record<string, DriverMetadata> = {
     integrationType: 'uptime-kuma',
     capabilities: [
       {
-        capability: 'service_status',
+        capability: 'uptime', // NEW: Was missing! Enables API monitor uptime % threshold alerts
+        displayName: 'Service Uptime',
+        category: 'health',
+        conditionType: 'threshold',
+        operators: ['gt', 'lt', 'gte', 'lte', 'eq'],
+        unit: '%',
+        description: 'Overall uptime percentage from Uptime Kuma'
+      },
+      {
+        capability: 'services', // FIXED: was 'service_status', must match driver return value
         displayName: 'Service Status',
         category: 'status',
         conditionType: 'status_change',

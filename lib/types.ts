@@ -233,8 +233,8 @@ export interface NotificationRule {
   id: number;
   webhook_id: number;
   name: string;
-  metric_type: MetricType;                   // Legacy field (deprecated, use metric_definition_id)
-  metric_definition_id: number | null;       // FK to metric_definitions (Phase 1 expansion)
+  metric_type: MetricType | null;            // Legacy field (nullable after migration 012)
+  metric_definition_id: number | null;       // FK to metric_definitions (preferred)
   condition_type: ConditionType;
 
   // Threshold configuration
@@ -288,8 +288,9 @@ export interface UpdateWebhookRequest {
 export interface CreateNotificationRuleRequest {
   webhook_id: number;
   name: string;
-  metric_type: MetricType;                   // Legacy support
-  metric_definition_id?: number;             // New: dynamic metrics
+  metric_type?: MetricType;                  // Optional (legacy support)
+  metric_definition_id?: number;             // Optional (preferred for new rules)
+  // At least one of (metric_type, metric_definition_id) must be provided - validated by API
   condition_type: ConditionType;
 
   // Threshold fields (required if condition_type = 'threshold')

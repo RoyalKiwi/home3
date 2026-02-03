@@ -19,9 +19,10 @@ export async function GET(request: NextRequest) {
     const integrationType = searchParams.get('integration_type');
 
     // Get metrics from database via MetricRegistry
+    // Filter out legacy metrics (integration_type = NULL) - these are generic placeholders
     const metrics = integrationType
       ? MetricRegistry.getMetricsByIntegrationType(integrationType)
-      : MetricRegistry.getAllMetrics();
+      : MetricRegistry.getAllMetrics().filter(m => m.integration_type !== null);
 
     // Parse operators JSON string to array for each metric
     const parsedMetrics: ParsedMetricDefinition[] = metrics.map((metric) => ({

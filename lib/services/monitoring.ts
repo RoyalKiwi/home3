@@ -85,6 +85,17 @@ class MonitoringService {
         Object.keys(metricResults)
       );
 
+      // After metrics are collected, evaluate threshold rules
+      // This is the critical integration that makes threshold notifications work!
+      try {
+        const { evaluateThresholdRules } = await import('./alertEvaluator');
+        await evaluateThresholdRules(metricResults, integration.id);
+        console.log(`[Monitoring] Evaluated threshold rules for ${integration.service_name}`);
+      } catch (error) {
+        console.error('[Monitoring] Failed to evaluate threshold rules:', error);
+        // Don't throw - continue with poll even if evaluation fails
+      }
+
       return metricResults;
     } catch (error) {
       // Update status to failed
