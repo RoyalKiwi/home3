@@ -119,6 +119,17 @@ export function renderNotification(
   // Build variable context
   const variables = buildVariableContext(payload);
 
+  // Debug logging
+  console.log('[TemplateRenderer] Variables:', {
+    metricValue: variables.metricValue,
+    threshold: variables.threshold,
+    unit: variables.unit,
+    fromPayload: {
+      metricValue: payload.metadata?.metricValue,
+      threshold: payload.metadata?.threshold,
+    }
+  });
+
   // Render template
   const title = renderTemplate(template.title_template, variables);
   const message = renderTemplate(template.message_template, variables);

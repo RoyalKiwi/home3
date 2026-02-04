@@ -219,6 +219,15 @@ class NotificationEvaluator {
         },
       };
 
+      // Debug logging
+      console.log('[NotificationEvaluator] Sending notification with metadata:', {
+        metricValue,
+        threshold: rule.threshold,
+        unit,
+        metricDisplayName,
+        fullMetadata: notificationPayload.metadata
+      });
+
       // Use notification service to send alert
       await notificationService.sendAlert(rule.id, notificationPayload);
 

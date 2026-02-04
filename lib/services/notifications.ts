@@ -399,6 +399,14 @@ class NotificationService {
         message: rendered.message,
       };
 
+      // Debug logging
+      console.log('[NotificationService] Final payload metadata:', {
+        metricValue: finalPayload.metadata?.metricValue,
+        threshold: finalPayload.metadata?.threshold,
+        unit: finalPayload.metadata?.unit,
+        fullMetadata: finalPayload.metadata
+      });
+
       // Decrypt webhook URL
       const webhookUrl = decrypt(rule.webhook_url);
 
