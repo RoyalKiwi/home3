@@ -229,4 +229,26 @@ export class UptimeKumaDriver extends BaseDriver {
     return monitors;
   }
 
+  /**
+   * Fetch a specific metric by key
+   * Routes metric key to appropriate fetch method
+   */
+  async fetchMetric(key: string): Promise<MetricData | null> {
+    try {
+      // Route based on metric key pattern
+      if (key.endsWith('_uptime')) {
+        return await this.fetchUptime();
+      } else if (key.endsWith('_status')) {
+        return await this.fetchServices();
+      }
+
+      // Metric key not implemented yet
+      console.warn(`[UptimeKumaDriver] Metric key '${key}' not implemented`);
+      return null;
+    } catch (error) {
+      console.error(`[UptimeKumaDriver] Failed to fetch metric '${key}':`, error);
+      return null;
+    }
+  }
+
 }

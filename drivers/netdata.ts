@@ -259,4 +259,30 @@ export class NetdataDriver extends BaseDriver {
     };
   }
 
+  /**
+   * Fetch a specific metric by key
+   * Routes metric key to appropriate fetch method
+   */
+  async fetchMetric(key: string): Promise<MetricData | null> {
+    try {
+      // Route based on metric key pattern
+      if (key === 'cpu_usage') {
+        return await this.fetchCPU();
+      } else if (key === 'memory_usage') {
+        return await this.fetchMemory();
+      } else if (key === 'disk_usage') {
+        return await this.fetchDisk();
+      } else if (key.startsWith('network_')) {
+        return await this.fetchNetwork();
+      }
+
+      // Metric key not implemented yet
+      console.warn(`[NetdataDriver] Metric key '${key}' not implemented`);
+      return null;
+    } catch (error) {
+      console.error(`[NetdataDriver] Failed to fetch metric '${key}':`, error);
+      return null;
+    }
+  }
+
 }

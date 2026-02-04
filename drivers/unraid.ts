@@ -437,4 +437,34 @@ export class UnraidDriver extends BaseDriver {
     };
   }
 
+  /**
+   * Fetch a specific metric by key
+   * Routes metric key to appropriate fetch method
+   */
+  async fetchMetric(key: string): Promise<MetricData | null> {
+    try {
+      // System metrics
+      if (key === 'cpu_usage') {
+        return await this.fetchCPU();
+      } else if (key === 'cpu_temp') {
+        return await this.fetchTemperature();
+      } else if (key === 'memory_usage') {
+        return await this.fetchMemory();
+      } else if (key.startsWith('disk_') && key.endsWith('_usage')) {
+        return await this.fetchDisk();
+      } else if (key.startsWith('disk_') && key.endsWith('_temp')) {
+        return await this.fetchTemperature();
+      } else if (key.startsWith('docker_')) {
+        return await this.fetchDocker();
+      }
+
+      // Metric key not implemented yet
+      console.warn(`[UnraidDriver] Metric key '${key}' not implemented`);
+      return null;
+    } catch (error) {
+      console.error(`[UnraidDriver] Failed to fetch metric '${key}':`, error);
+      return null;
+    }
+  }
+
 }

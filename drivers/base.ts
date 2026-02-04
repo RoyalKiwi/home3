@@ -44,4 +44,11 @@ export abstract class BaseDriver {
    * @returns Promise resolving to array of capability metadata
    */
   abstract getCapabilities(): Promise<CapabilityMetadata[]>;
+
+  /**
+   * Fetch a specific metric by key
+   * @param key - The capability key (e.g., 'cpu_usage', 'disk_sda_temp')
+   * @returns Metric data or null if not available
+   */
+  abstract fetchMetric(key: string): Promise<MetricData | null>;
 }
