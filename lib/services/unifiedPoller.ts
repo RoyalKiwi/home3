@@ -9,7 +9,7 @@ import { decrypt } from '@/lib/crypto';
 import { createDriver } from './driverFactory';
 import { metricsSSE } from '@/lib/sse-managers';
 import { metricsEventBus } from './metricsEventBus';
-import type { Integration, IntegrationCredentials } from '@/lib/types';
+import type { Integration, IntegrationCredentials, CapabilityMetadata } from '@/lib/types';
 
 interface PollerConfig {
   pollInterval: number; // Default 30s
@@ -122,21 +122,21 @@ class UnifiedPoller {
       const driver = createDriver(integration.id, integration.service_type, creds);
 
       // Fetch ALL capabilities
-      const capabilities = driver.getCapabilities();
+      const capabilities = await driver.getCapabilities();
       const metricData: Record<string, any> = {};
       let successCount = 0;
       let failCount = 0;
 
       for (const capability of capabilities) {
         try {
-          const data = await driver.fetchMetric(capability);
+          const data = await driver.fetchMetric(capability.key);
           if (data) {
-            metricData[capability] = data.value;
+            metricData[capability.key] = data.value;
             successCount++;
           }
         } catch (error) {
           console.error(
-            `[UnifiedPoller] Failed to fetch ${capability} from ${integration.service_name}:`,
+            `[UnifiedPoller] Failed to fetch ${capability.key} from ${integration.service_name}:`,
             error instanceof Error ? error.message : error
           );
           failCount++;
