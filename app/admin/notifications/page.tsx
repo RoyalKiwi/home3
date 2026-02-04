@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import styles from './page.module.css';
+import type { CapabilityMetadata } from '@/lib/types';
 
 type Tab = 'rules' | 'templates' | 'maintenance';
 
@@ -42,18 +43,47 @@ export default function NotificationsPage() {
   const [integrations, setIntegrations] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [metrics, setMetrics] = useState<any[]>([]);
-  const [capabilities, setCapabilities] = useState<string[]>([]);
+  const [capabilities, setCapabilities] = useState<CapabilityMetadata[]>([]);
   const [loadingCapabilities, setLoadingCapabilities] = useState(false);
   const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Cascading dropdown state
+  const [selectedIntegration, setSelectedIntegration] = useState<number | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<string>('');
+  const [selectedMetric, setSelectedMetric] = useState<string>('');
 
   // Editing state
   const [editingId, setEditingId] = useState<number | null | 'new'>(null);
   const [editForm, setEditForm] = useState<Rule | null>(null);
 
+  // Derived state for cascading dropdowns
+  const availableTargets = useMemo(() => {
+    if (!selectedIntegration || capabilities.length === 0) return [];
+    // Get unique targets from capabilities
+    return [...new Set(capabilities.map(c => c.target))].sort();
+  }, [capabilities, selectedIntegration]);
+
+  const availableMetrics = useMemo(() => {
+    if (!selectedTarget || capabilities.length === 0) return [];
+    // Filter capabilities by selected target
+    return capabilities.filter(c => c.target === selectedTarget);
+  }, [capabilities, selectedTarget]);
+
   useEffect(() => {
     loadData();
   }, []);
+
+  // When capabilities load and we're editing a rule, extract target/metric from metric_key
+  useEffect(() => {
+    if (editForm && editForm.metric_key && capabilities.length > 0) {
+      const capability = capabilities.find(c => c.key === editForm.metric_key);
+      if (capability) {
+        setSelectedTarget(capability.target);
+        setSelectedMetric(capability.metric);
+      }
+    }
+  }, [capabilities, editForm?.metric_key]);
 
   async function loadData() {
     await Promise.all([
@@ -161,6 +191,11 @@ export default function NotificationsPage() {
       is_active: true,
     };
 
+    // Reset cascading selections
+    setSelectedIntegration(integrations[0]?.id || null);
+    setSelectedTarget('');
+    setSelectedMetric('');
+
     // Load capabilities for first integration
     if (integrations[0]?.id) {
       loadCapabilities(integrations[0].id);
@@ -173,6 +208,26 @@ export default function NotificationsPage() {
   function handleEditRule(rule: Rule) {
     setEditForm({ ...rule });
     setEditingId(rule.id!);
+
+    // Set cascading state for editing
+    setSelectedIntegration(rule.integration_id);
+
+    // Load capabilities for this integration
+    if (rule.integration_id) {
+      loadCapabilities(rule.integration_id);
+
+      // Try to extract target and metric from rule.metric_key
+      // Note: This is approximate since we don't have the capability data yet
+      // The actual target/metric will be set once capabilities load
+      const capability = capabilities.find(c => c.key === rule.metric_key);
+      if (capability) {
+        setSelectedTarget(capability.target);
+        setSelectedMetric(capability.metric);
+      } else {
+        setSelectedTarget('');
+        setSelectedMetric('');
+      }
+    }
   }
 
   function handleCancelEdit() {
@@ -268,6 +323,15 @@ export default function NotificationsPage() {
     };
 
     const operatorSymbol = operators[rule.operator] || rule.operator;
+
+    // Try to find capability metadata to get display info
+    const capability = capabilities.find(c => c.key === rule.metric_key);
+
+    if (capability) {
+      return `${capability.target} ${capability.metric} ${operatorSymbol} ${rule.threshold}${capability.unit}`;
+    }
+
+    // Fallback to plain metric key if capability not found
     return `${rule.metric_key} ${operatorSymbol} ${rule.threshold}`;
   }
 
@@ -295,7 +359,7 @@ export default function NotificationsPage() {
           />
         </div>
 
-        {/* Integration Selector */}
+        {/* Source Selector (Cascading Step 1) */}
         <div>
           <select
             className={styles.inlineSelect}
@@ -307,6 +371,11 @@ export default function NotificationsPage() {
                 integration_id: integrationId,
                 metric_key: '' // Reset metric when integration changes
               });
+
+              // Reset cascading selections
+              setSelectedIntegration(integrationId || null);
+              setSelectedTarget('');
+              setSelectedMetric('');
 
               // Load capabilities for selected integration
               if (integrationId) {
@@ -325,21 +394,46 @@ export default function NotificationsPage() {
           </select>
         </div>
 
-        {/* Metric Key + Condition */}
+        {/* Target Selector (Cascading Step 2) */}
         <div>
-          {/* Metric Key Selector */}
+          <select
+            className={styles.inlineSelect}
+            value={selectedTarget}
+            onChange={(e) => {
+              setSelectedTarget(e.target.value);
+              setSelectedMetric(''); // Reset metric when target changes
+              setEditForm({ ...rule, metric_key: '' }); // Reset metric_key in form
+            }}
+            disabled={!rule.integration_id || loadingCapabilities || availableTargets.length === 0}
+          >
+            <option value="">
+              {loadingCapabilities ? 'Loading...' : availableTargets.length === 0 ? 'No targets available' : 'Select target...'}
+            </option>
+            {availableTargets.map((target) => (
+              <option key={target} value={target}>
+                {target.toUpperCase()}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Metric Selector (Cascading Step 3) */}
+        <div>
           <select
             className={styles.inlineSelect}
             value={rule.metric_key}
-            onChange={(e) => setEditForm({ ...rule, metric_key: e.target.value })}
-            disabled={!rule.integration_id || loadingCapabilities}
+            onChange={(e) => {
+              setSelectedMetric(e.target.value);
+              setEditForm({ ...rule, metric_key: e.target.value });
+            }}
+            disabled={!selectedTarget || availableMetrics.length === 0}
           >
             <option value="">
-              {loadingCapabilities ? 'Loading metrics...' : 'Select metric...'}
+              {selectedTarget ? 'Select metric...' : 'Select target first...'}
             </option>
-            {capabilities.map((cap) => (
-              <option key={cap} value={cap}>
-                {cap}
+            {availableMetrics.map((cap) => (
+              <option key={cap.key} value={cap.key} title={cap.description}>
+                {cap.metric.toUpperCase()} ({cap.unit}) - {cap.description}
               </option>
             ))}
           </select>
