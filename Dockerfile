@@ -8,8 +8,8 @@ FROM node:22-alpine AS deps
 
 WORKDIR /app
 
-# Install dependencies for better-sqlite3 compilation
-RUN apk add --no-cache python3 make g++
+# Install dependencies for better-sqlite3 and sharp compilation
+RUN apk add --no-cache python3 make g++ vips-dev
 
 # Copy package files
 COPY package.json ./
@@ -22,8 +22,8 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies including git
-RUN apk add --no-cache python3 make g++ git
+# Install build dependencies including git and vips for sharp
+RUN apk add --no-cache python3 make g++ git vips-dev
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
@@ -40,10 +40,11 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-# Install runtime dependencies
+# Install runtime dependencies including vips for sharp
 RUN apk add --no-cache \
     dumb-init \
-    curl
+    curl \
+    vips
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \
