@@ -42,7 +42,7 @@ export async function POST(
     let unit = '';
     let metricDisplayName = rule.metric_key;
     try {
-      const { createDriver } = await import('@/drivers');
+      const { createDriver } = await import('@/lib/services/driverFactory');
       const { decrypt } = await import('@/lib/crypto');
       const integration = db.prepare('SELECT * FROM integrations WHERE id = ?').get(rule.integration_id) as any;
       if (integration) {
